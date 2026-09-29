@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, HostListener, inject, Input, Output } from '@angular/core';
 
 import { ButtonComponent } from '../../ui/button/button.component';
 import { IconComponent } from '../../ui/icon/icon.component';
@@ -150,7 +150,8 @@ const CREATE_DOCUMENT_PROCESSES: CreateDocumentProcessOption[] = collectProcessO
                     </button>
 
                     @if (openedSelectField === field.placeholder) {
-                      <button class="fixed inset-0 z-40 cursor-default bg-transparent" type="button" data-capa-cierre tabindex="-1" aria-hidden="true" (mousedown)="$event.preventDefault()" (click)="closeSelect()"></button>
+                      <!-- El cierre al pulsar fuera lo maneja onDocumentPointerDown (no una capa que
+                           se coma el clic): así un solo clic cierra este desplegable y abre el siguiente. -->
                       <div class="absolute left-0 right-0 top-[calc(100%+4px)] z-50" siafFoco [siafFocoAtrapar]="false" (siafFocoEscape)="closeSelect()" (siafFocoSalida)="closeSelect()">
                         <siaf-select-options
                           [options]="fieldOptions(field)"
@@ -228,6 +229,22 @@ const CREATE_DOCUMENT_PROCESSES: CreateDocumentProcessOption[] = collectProcessO
 })
 export class CreateDocumentComponent {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Cierra el desplegable abierto cuando se pulsa fuera de él, SIN consumir el clic
+   * (a diferencia de una capa a pantalla completa): si el mismo clic cae en otro campo
+   * —p. ej. «Tipo de acción» estando abierto «Documento»— ese campo se abre en un solo clic.
+   */
+  @HostListener('document:pointerdown', ['$event'])
+  onDocumentPointerDown(event: Event): void {
+    if (!this.openedSelectField) return;
+    const target = event.target;
+    // Dentro de una lista de opciones o sobre el disparador de un select: lo maneja el propio componente.
+    if (target instanceof HTMLElement && target.closest('[role="listbox"], button[aria-haspopup="listbox"]')) return;
+    // Cualquier otro punto (buscador, botones o fuera del panel): cerrar sin consumir el clic.
+    this.closeSelect();
+  }
 
   @Input() variant: CreateDocumentVariant = 'sidepanel';
   @Input() title = 'Crear documento';

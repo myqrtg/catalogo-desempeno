@@ -3229,7 +3229,6 @@ export const MANIFIESTO_UI_KIT: readonly FichaComponente[] = [
         "aria-controls",
         "aria-expanded",
         "aria-haspopup",
-        "aria-hidden",
         "aria-label",
         "aria-selected"
       ]
