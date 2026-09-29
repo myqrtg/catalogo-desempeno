@@ -40,6 +40,9 @@ export interface PerfilItem {
   /** Nombre completo del usuario dueño del perfil; lo muestra la barra superior (si falta, cae al rol). */
   nombre?: string | null;
 
+  /** Etiqueta de oficina a mostrar en la barra superior; si falta, se arma con entidad/unidad. */
+  oficina?: string | null;
+
   /**
    * Permisos efectivos del rol (códigos como 'document.read'), provistos por
    * el backend desde SegRolPermiso. Fuente única del gating de UI; si falta

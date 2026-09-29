@@ -20,6 +20,8 @@ export interface UsuarioDemo {
   apellidoMaterno: string;
   /** Nombre a mostrar en la barra superior; si falta, la UI cae al rol del perfil. */
   nombre?: string;
+  /** Oficina a mostrar en la barra superior; si falta, se arma con entidad/unidad. */
+  oficina?: string;
   /** Qué muestra en el panel de usuarios del login. */
   descripcion: string;
   perfiles: PerfilItem[];
@@ -56,6 +58,7 @@ export const USUARIOS_DEMO: UsuarioDemo[] = [
     apellidoPaterno: 'Torres',
     apellidoMaterno: 'Díaz',
     nombre: 'Juan Doe Perez Perez',
+    oficina: 'DCGP',
     descripcion: 'Creador: registra y verifica solicitudes',
     perfiles: [perfil('perfil-ana-creador', 'CREADOR', 'Creador', 'Operador de cuentas bancarias')],
   },

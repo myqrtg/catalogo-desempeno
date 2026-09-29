@@ -92,7 +92,7 @@ function rolDe(perfil: PerfilItem): { codigo: string; nombre: string } {
 
 function respuestaLogin(usuario: UsuarioDemo): LoginResponse {
   // El backend real entrega el nombre del usuario junto al perfil; acá lo adjuntamos para la barra superior.
-  const perfiles = usuario.perfiles.map((p) => ({ ...p, nombre: usuario.nombre ?? null }));
+  const perfiles = usuario.perfiles.map((p) => ({ ...p, nombre: usuario.nombre ?? null, oficina: usuario.oficina ?? null }));
   return { accessToken: firmarToken(usuario, perfiles[0]), debeCambiarPassword: false, perfilActivo: perfiles[0], perfilesDisponibles: perfiles };
 }
 
@@ -114,7 +114,7 @@ const cambiarPerfil: Manejador = ({ req, sesion }) => {
   const { perfilId } = (req.body ?? {}) as { perfilId?: string };
   const perfilBase = sesion.usuario.perfiles.find((p) => p.id === perfilId);
   if (!perfilBase) return error(404, 'El perfil no pertenece al usuario.');
-  const perfil = { ...perfilBase, nombre: sesion.usuario.nombre ?? null };
+  const perfil = { ...perfilBase, nombre: sesion.usuario.nombre ?? null, oficina: sesion.usuario.oficina ?? null };
   const respuesta: CambiarPerfilResponse = { accessToken: firmarToken(sesion.usuario, perfil), perfilActivo: perfil };
   return ok(respuesta);
 };

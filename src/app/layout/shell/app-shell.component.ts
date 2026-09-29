@@ -128,10 +128,12 @@ export class AppShellComponent implements OnInit {
   private readonly catalogosApi = inject(CatalogosApiService);
   readonly currentUser = inject(CurrentUserService);
 
-  /** Iniciales del avatar: las del rol activo («CR», «AP»), así cambian al cambiar de perfil. */
+  /** Iniciales del avatar: primera y última palabra del nombre (p. ej. «Juan Doe Perez Perez» → «JP»). */
   readonly iniciales = computed(() => {
     const palabras = this.currentUser.user().name.trim().split(/\s+/).filter(Boolean);
-    const letras = palabras.length > 1 ? palabras.slice(0, 2).map((p) => p[0]).join('') : (palabras[0] ?? '').slice(0, 2);
+    const letras = palabras.length > 1
+      ? (palabras[0][0] ?? '') + (palabras[palabras.length - 1][0] ?? '')
+      : (palabras[0] ?? '').slice(0, 2);
     return letras.toUpperCase();
   });
 
