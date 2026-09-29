@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, signal } from '@angular/core';
 
-import { SelectionColumn, SelectionSideNavComponent } from '../../../../../shared/components/selection-side-nav/selection-side-nav.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DateTimePickerComponent } from '../../../../../shared/ui/date-time-picker/date-time-picker.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
@@ -9,6 +8,7 @@ import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-fie
 import { UploadSideNavComponent } from '../../../../../shared/ui/upload-side-nav/upload-side-nav.component';
 import { UploadedFileCardComponent, UploadedFileInfo } from '../../../../../shared/ui/uploaded-file-card/uploaded-file-card.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
+import { CatalogColumn, CatalogRow, CatalogSelectionModalComponent } from './catalog-selection-modal.component';
 
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
@@ -17,17 +17,26 @@ export interface IndicadorDetalleResumen {
   programa: string;
 }
 
-interface OpcionCatalogo {
+interface ProgramaPresupuestal {
   id: string;
   codigo: string;
   nombre: string;
+  /** Entidad responsable del programa (se autocompleta al elegir el programa). */
+  respCodigo: string;
+  respNombre: string;
 }
 
-const OPCIONES_PROGRAMA: OpcionCatalogo[] = [
-  { id: '0001', codigo: '0001', nombre: 'Programa Articulado Nutricional' },
-  { id: '0002', codigo: '0002', nombre: 'Logros de Aprendizaje de Estudiantes de Educación Básica Regular' },
-  { id: '0090', codigo: '0090', nombre: 'Logros de Aprendizaje' },
-  { id: '0104', codigo: '0104', nombre: 'Reducción de la Mortalidad por Emergencias y Urgencias Médicas' },
+const OPCIONES_PROGRAMA: ProgramaPresupuestal[] = [
+  { id: '0002', codigo: '0002', nombre: 'SALUD MATERNO NEONATAL', respCodigo: '011', respNombre: 'M. DE SALUD' },
+  { id: '1002', codigo: '1002', nombre: 'Productos específicos para desarrollo infantil temprano', respCodigo: '040', respNombre: 'M. DE DESARROLLO E INCLUSIÓN SOCIAL' },
+  { id: '1003', codigo: '1003', nombre: 'Enfermedades metaxenicas y zoonosis', respCodigo: '011', respNombre: 'M. DE SALUD' },
+  { id: '1004', codigo: '1004', nombre: 'Enfermedades no transmisibles', respCodigo: '011', respNombre: 'M. DE SALUD' },
+  { id: '1005', codigo: '1005', nombre: 'Prevención y control del cáncer', respCodigo: '011', respNombre: 'M. DE SALUD' },
+  { id: '1006', codigo: '1006', nombre: 'Reducción de delitos y faltas que afectan la seguridad ciudadana', respCodigo: '007', respNombre: 'M. DEL INTERIOR' },
+  { id: '1007', codigo: '1007', nombre: 'Lucha contra el terrorismo', respCodigo: '026', respNombre: 'M. DE DEFENSA' },
+  { id: '1008', codigo: '1008', nombre: 'Gestión integral de residuos sólidos', respCodigo: '005', respNombre: 'M. DEL AMBIENTE' },
+  { id: '1009', codigo: '1009', nombre: 'Reducción del tráfico ilícito de drogas', respCodigo: '007', respNombre: 'M. DEL INTERIOR' },
+  { id: '0068', codigo: '0068', nombre: 'Reducción de vulnerabilidad y atención de emergencias por desastres', respCodigo: '006', respNombre: 'PRESIDENCIA DEL CONSEJO DE MINISTROS' },
 ];
 
 interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
@@ -52,7 +61,7 @@ interface FilaValidacion { elemento: string; descripcion: string; }
     DateTimePickerComponent,
     UploadSideNavComponent,
     UploadedFileCardComponent,
-    SelectionSideNavComponent,
+    CatalogSelectionModalComponent,
     TooltipDirective,
   ],
   templateUrl: './indicador-desempeno-detalle.component.html',
@@ -63,16 +72,14 @@ export class IndicadorDesempenoDetalleComponent {
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
 
   // ── Selección de programa y entidad ───────────────────────────────
-  readonly programa = signal<OpcionCatalogo | null>(null);
-  // La entidad responsable no se selecciona a mano (el diseño no expone búsqueda); se muestra su estado vacío.
-  readonly entidad = signal<OpcionCatalogo | null>(null);
-  readonly panelPrograma = signal(false);
-  // Selección temporal del panel (controlada): el side-nav no guarda estado propio.
-  readonly programaSelIds = signal<string[]>([]);
-  readonly opcionesPrograma = OPCIONES_PROGRAMA;
-  readonly columnasCatalogo: SelectionColumn<OpcionCatalogo>[] = [
-    { key: 'codigo', label: 'Código', widthClass: 'w-[120px]' },
-    { key: 'nombre', label: 'Nombre' },
+  readonly programa = signal<ProgramaPresupuestal | null>(null);
+  readonly modalPrograma = signal(false);
+
+  // Filas y columnas del modal de selección.
+  readonly filasPrograma: CatalogRow[] = OPCIONES_PROGRAMA.map((p) => ({ id: p.id, codigo: p.codigo, nombre: p.nombre }));
+  readonly columnasPrograma: CatalogColumn[] = [
+    { key: 'codigo', label: 'Código programa', widthClass: 'w-[200px]' },
+    { key: 'nombre', label: 'Nombre programa' },
   ];
 
   // ── Datos del indicador ───────────────────────────────────────────
@@ -154,19 +161,19 @@ export class IndicadorDesempenoDetalleComponent {
     this.saved.emit({ codigo: this.codigo().trim(), nombre: this.nombre().trim(), programa: this.programa()?.nombre ?? '' });
   }
 
-  // ── Selección de programa/entidad ─────────────────────────────────
-  abrirPanelPrograma(): void {
-    this.programaSelIds.set(this.programa() ? [this.programa()!.id] : []);
-    this.panelPrograma.set(true);
+  // ── Selección de programa (modal) ─────────────────────────────────
+  abrirModalPrograma(): void {
+    this.modalPrograma.set(true);
   }
 
-  onProgramaAceptado(ids: string[]): void {
-    this.programa.set(this.opcionesPrograma.find((o) => o.id === ids[0]) ?? null);
-    this.panelPrograma.set(false);
+  onProgramaAceptado(id: string): void {
+    this.programa.set(OPCIONES_PROGRAMA.find((o) => o.id === id) ?? null);
+    this.modalPrograma.set(false);
   }
 
-  etiquetaSeleccion(opcion: OpcionCatalogo | null): string {
-    return opcion ? `${opcion.codigo} - ${opcion.nombre}` : '';
+  /** Limpiar el programa también limpia la entidad responsable (derivada). */
+  limpiarPrograma(): void {
+    this.programa.set(null);
   }
 
   // ── Tablas dinámicas ──────────────────────────────────────────────

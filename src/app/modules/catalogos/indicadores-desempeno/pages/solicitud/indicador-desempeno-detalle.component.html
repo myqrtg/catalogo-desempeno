@@ -6,25 +6,41 @@
   <div class="flex flex-col gap-siaf-xs">
     <div class="flex min-h-10 items-center justify-between gap-siaf-md">
       <h4 class="m-0 text-sm font-bold text-text">Programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
-      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar programa presupuestal" siafTooltip="Buscar" (click)="abrirPanelPrograma()" />
+      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar programa presupuestal" siafTooltip="Buscar" [disabled]="!!programa()" (click)="abrirModalPrograma()" />
     </div>
-    <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
-      <p class="m-0 text-sm" [class.text-[var(--sys-color-text-neutral-medium)]]="!programa()" [class.text-text]="programa()">
-        {{ programa() ? etiquetaSeleccion(programa()) : 'No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.' }}
-      </p>
-    </div>
+    @if (programa(); as p) {
+      <div class="flex items-start gap-siaf-md rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <div class="grid min-w-0 flex-1 gap-siaf-xs md:grid-cols-[200px_1fr]">
+          <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código programa</span><span class="text-sm font-bold text-text">{{ p.codigo }}</span></div>
+          <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre programa</span><span class="text-sm font-bold text-text">{{ p.nombre }}</span></div>
+        </div>
+        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar programa" (click)="limpiarPrograma()" />
+      </div>
+    } @else {
+      <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.</p>
+      </div>
+    }
   </div>
 
-  <!-- Entidad responsable (sin botón de búsqueda, según el diseño) -->
+  <!-- Entidad responsable (se autocompleta al elegir el programa) -->
   <div class="flex flex-col gap-siaf-xs">
     <div class="flex min-h-10 items-center gap-siaf-md">
       <h4 class="m-0 text-sm font-bold text-text">Entidad responsable del programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
     </div>
-    <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
-      <p class="m-0 text-sm" [class.text-[var(--sys-color-text-neutral-medium)]]="!entidad()" [class.text-text]="entidad()">
-        {{ entidad() ? etiquetaSeleccion(entidad()) : 'No se ha seleccionado ninguna opción.' }}
-      </p>
-    </div>
+    @if (programa(); as p) {
+      <div class="flex items-start gap-siaf-md rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <div class="grid min-w-0 flex-1 gap-siaf-xs md:grid-cols-[200px_1fr]">
+          <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código responsable</span><span class="text-sm font-bold text-text">{{ p.respCodigo }}</span></div>
+          <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre responsable</span><span class="text-sm font-bold text-text">{{ p.respNombre }}</span></div>
+        </div>
+        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar entidad responsable" (click)="limpiarPrograma()" />
+      </div>
+    } @else {
+      <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se ha seleccionado ninguna opción.</p>
+      </div>
+    }
   </div>
 
   <!-- ── DATOS DEL INDICADOR ── -->
@@ -188,19 +204,15 @@
   </div>
 </section>
 
-<!-- Paneles de selección -->
-<siaf-selection-side-nav
-  [open]="panelPrograma()"
-  title="Programa presupuestal"
-  [rows]="opcionesPrograma"
-  [columns]="columnasCatalogo"
-  idKey="id"
-  searchPlaceholder="Buscar programa"
-  tableMinWidthClass="min-w-[520px]"
-  [selectedIds]="programaSelIds()"
-  (selectionChange)="programaSelIds.set($event)"
+<!-- Modal de selección de programa presupuestal -->
+<siaf-catalog-selection-modal
+  [open]="modalPrograma()"
+  title="Seleccionar programa presupuestal"
+  [columns]="columnasPrograma"
+  [rows]="filasPrograma"
+  [selectedId]="programa()?.id ?? null"
   (accepted)="onProgramaAceptado($event)"
-  (closed)="panelPrograma.set(false)"
+  (closed)="modalPrograma.set(false)"
 />
 
 <!-- Subidas de archivo -->
