@@ -67,10 +67,12 @@ export const DEFAULT_PROCESS_TREE: ProcessMenuNode[] = [
             label: 'Catálogo de indicadores de desempeño',
             comingSoon: true,
             selected: true,
-            // Documento que ofrece el panel «Crear documento» al elegir este proceso.
+            // Documento que ofrece el panel «Crear documento» al elegir este proceso, con sus tipos de acción.
             documentOptions: ['Solicitud de indicadores de desempeño'],
-            documentCreateOptions: [{ label: 'Solicitud de indicadores de desempeño', actionTypes: ['Creación'] }],
-            actionTypeOptions: ['Creación'],
+            documentCreateOptions: [
+              { label: 'Solicitud de indicadores de desempeño', actionTypes: ['Creación', 'Modificación', 'Anulación'] },
+            ],
+            actionTypeOptions: ['Creación', 'Modificación', 'Anulación'],
           },
           { id: 'catalogo-productos', label: 'Catálogo de productos', comingSoon: true },
           { id: 'catalogo-programas-presupuestales', label: 'Catálogo de programas presupuestales', comingSoon: true },
