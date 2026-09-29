@@ -158,8 +158,8 @@
   <div class="flex flex-col gap-siaf-md">
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Medición</h3>
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
-      <siaf-date-time-picker label="Año de inicio de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
-      <siaf-date-time-picker label="Año de fin de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+      <siaf-date-time-picker [defaultToToday]="false" label="Año de inicio de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+      <siaf-date-time-picker [defaultToToday]="false" label="Año de fin de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
     </div>
   </div>
 
@@ -168,8 +168,8 @@
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Vigencia</h3>
     <siaf-radio-group label="Estado" name="estado-vigencia" [inline]="true" [disabled]="true" [options]="opcSiNo" [value]="estadoVigencia()" />
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
-      <siaf-date-time-picker label="Fecha desde" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
-      <siaf-date-time-picker label="Fecha hasta" [fullWidth]="true" [disabled]="true" />
+      <siaf-date-time-picker [defaultToToday]="false" label="Fecha desde" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+      <siaf-date-time-picker [defaultToToday]="false" label="Fecha hasta" [fullWidth]="true" [disabled]="true" />
     </div>
   </div>
 

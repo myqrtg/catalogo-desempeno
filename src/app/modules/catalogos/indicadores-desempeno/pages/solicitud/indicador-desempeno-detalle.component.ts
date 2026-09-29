@@ -91,7 +91,7 @@ export class IndicadorDesempenoDetalleComponent {
   readonly dimension = signal('');
   readonly unidadMedida = signal('');
   readonly sentido = signal('');
-  readonly tipoCalculo = signal('numerador');
+  readonly tipoCalculo = signal('');
   readonly numerador = signal('');
   readonly denominador = signal('');
   readonly tipoFuente = signal('');
@@ -117,12 +117,12 @@ export class IndicadorDesempenoDetalleComponent {
   readonly panelSustento = signal(false);
 
   // ── Vigencia en procesos ──────────────────────────────────────────
-  readonly programacion = signal('SI');
-  readonly gestion = signal('SI');
-  readonly evaluacion = signal('NO');
+  readonly programacion = signal('');
+  readonly gestion = signal('');
+  readonly evaluacion = signal('');
 
   // ── Vigencia ──────────────────────────────────────────────────────
-  readonly estadoVigencia = signal('SI');
+  readonly estadoVigencia = signal('');
 
   // ── Opciones de selects y radios ──────────────────────────────────
   readonly opcNivelMedicion = [
