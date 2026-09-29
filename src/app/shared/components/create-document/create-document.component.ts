@@ -348,14 +348,14 @@ export class CreateDocumentComponent {
       }
     }
 
-    // OnPush: refrescar de inmediato para que el campo dependiente (p. ej. «Tipo de acción»
-    // al elegir «Documento») se habilite sin esperar a otra interacción.
-    this.cdr.markForCheck();
-
     this.fieldValueChange.emit({
       placeholder: field.placeholder,
       value
     });
+
+    // OnPush: forzar el refresco sincrónico para que el campo dependiente (p. ej. «Tipo de acción»
+    // al elegir «Documento») se habilite de inmediato, sin esperar a otra interacción.
+    this.cdr.detectChanges();
   }
 
   onSearchFocus(field: CreateDocumentField): void {
