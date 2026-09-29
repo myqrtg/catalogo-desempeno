@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { CREATE_DOCUMENT_OPTIONS, REQUEST_ROUTE } from '../../modules/tesoreria/cuentas-bancarias/config/cuentas-bancarias.rutas';
-import { CreateDocumentAccepted, CreateDocumentComponent, CreateDocumentProcessOption } from '../../shared/components/create-document/create-document.component';
+import { CreateDocumentAccepted, CreateDocumentComponent, CreateDocumentProcessOption, collectProcessOptions } from '../../shared/components/create-document/create-document.component';
 import { CatalogosApiService, TipoDocumentoResponse } from '../../core/api/catalogos-api.service';
 import { MobileNavigationMenuComponent } from '../mobile-navigation-menu/mobile-navigation-menu.component';
 import { ProcessMenuNode, ProcessMenuTreeComponent } from '../process-menu-tree/process-menu-tree.component';
@@ -16,7 +16,7 @@ import { SidebarComponent, SidebarNavigation } from '../sidebar/sidebar.componen
 import { CurrentUserService } from '../../core/auth/current-user.service';
 import { PermissionService } from '../../core/auth/permission.service';
 import { ShellNavigationService } from './shell-navigation.service';
-import { ADMIN_MENU_TREE } from '../../shared/utils/process-tree.util';
+import { ADMIN_MENU_TREE, DEFAULT_PROCESS_TREE } from '../../shared/utils/process-tree.util';
 
 /**
  * Armazón de la app autenticada: navbar, sidebar y los paneles flotantes sobre los que vive el router-outlet.
@@ -149,21 +149,31 @@ export class AppShellComponent implements OnInit {
   createDocumentOpen = false;
   adminMenuOpen = false;
 
+  // Los catálogos del árbol de procesos alimentan el buscador «Buscar proceso o procedimiento»
+  // (así, al escribir «Catálogo» aparecen las hojas del árbol, aunque aún no tengan pantalla).
+  private readonly treeOptions: CreateDocumentProcessOption[] = collectProcessOptions(DEFAULT_PROCESS_TREE);
+
   // Fallback en caso de que el API tarde o falle — la maqueta sigue funcional
   private readonly fallbackOptions: CreateDocumentProcessOption[] = [...CREATE_DOCUMENT_OPTIONS];
 
-  readonly createDocumentOptions = signal<CreateDocumentProcessOption[]>(this.fallbackOptions);
+  readonly createDocumentOptions = signal<CreateDocumentProcessOption[]>(this.combinarOpciones(this.fallbackOptions));
 
   ngOnInit(): void {
     this.catalogosApi.listarTiposDocumento().subscribe({
       next: tipos => {
         const opciones = this.mapTiposToProcessOptions(tipos);
-        if (opciones.length > 0) this.createDocumentOptions.set(opciones);
+        this.createDocumentOptions.set(this.combinarOpciones(opciones.length > 0 ? opciones : this.fallbackOptions));
       },
       error: () => {
         // Mantener fallback si el API falla
       },
     });
+  }
+
+  /** Une las opciones con ruta (API o fallback) con las hojas del árbol de procesos, sin duplicar por id. */
+  private combinarOpciones(base: CreateDocumentProcessOption[]): CreateDocumentProcessOption[] {
+    const ids = new Set(base.map(o => o.id));
+    return [...base, ...this.treeOptions.filter(o => !ids.has(o.id))];
   }
 
   private mapTiposToProcessOptions(tipos: TipoDocumentoResponse[]): CreateDocumentProcessOption[] {

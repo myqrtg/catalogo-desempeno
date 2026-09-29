@@ -584,7 +584,7 @@ export class CreateDocumentComponent {
   }
 }
 
-function collectProcessOptions(nodes: ProcessMenuNode[]): CreateDocumentProcessOption[] {
+export function collectProcessOptions(nodes: ProcessMenuNode[]): CreateDocumentProcessOption[] {
   return nodes.flatMap((node) => {
     const children = node.children ? collectProcessOptions(node.children) : [];
 
