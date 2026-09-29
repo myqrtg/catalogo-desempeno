@@ -66,6 +66,7 @@ import { SolicitudeHeaderComponent, SolicitudeHeaderRole, SolicitudeHeaderState 
           [showButtonGroup]="showButtonGroup"
           [saveDisabled]="saveDisabled"
           [verifyDisabled]="verifyDisabled"
+          [verifyLabel]="verifyLabel"
           [loading]="loading"
           (returned)="returned.emit()"
           (canceled)="canceled.emit()"
@@ -102,6 +103,8 @@ export class SolicitudePageLayoutComponent {
   @Input() showButtonGroup = true;
   @Input() saveDisabled = false;
   @Input() verifyDisabled = false;
+  /** Texto del botón de verificación (por defecto «Verificar»; p. ej. «Verificar y enviar»). */
+  @Input() verifyLabel = 'Verificar';
   @Input() trayMenuOpen = false;
   @Input() floatingPanelOpen = false;
   @Input() loading = false;

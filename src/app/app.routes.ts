@@ -46,6 +46,13 @@ export const routes: Routes = [
           import('./modules/tesoreria/tesoreria.routes').then((m) => m.TESORERIA_ROUTES),
         data: { permissions: ['document.read'] }
       },
+      // ── Clasificadores y catálogos ──
+      {
+        path: '',
+        loadChildren: () =>
+          import('./modules/catalogos/catalogos.routes').then((m) => m.CATALOGOS_ROUTES),
+        data: { permissions: ['document.read'] }
+      },
     ]
   },
   // Sin sesión, el guard del armazón lleva al login.
