@@ -30,13 +30,6 @@ const OPCIONES_PROGRAMA: OpcionCatalogo[] = [
   { id: '0104', codigo: '0104', nombre: 'Reducción de la Mortalidad por Emergencias y Urgencias Médicas' },
 ];
 
-const OPCIONES_ENTIDAD: OpcionCatalogo[] = [
-  { id: 'ent-minedu', codigo: '010', nombre: 'Ministerio de Educación' },
-  { id: 'ent-minsa', codigo: '011', nombre: 'Ministerio de Salud' },
-  { id: 'ent-midis', codigo: '040', nombre: 'Ministerio de Desarrollo e Inclusión Social' },
-  { id: 'ent-mef', codigo: '008', nombre: 'Ministerio de Economía y Finanzas' },
-];
-
 interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
 interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
 interface FilaValidacion { elemento: string; descripcion: string; }
@@ -71,14 +64,12 @@ export class IndicadorDesempenoDetalleComponent {
 
   // ── Selección de programa y entidad ───────────────────────────────
   readonly programa = signal<OpcionCatalogo | null>(null);
+  // La entidad responsable no se selecciona a mano (el diseño no expone búsqueda); se muestra su estado vacío.
   readonly entidad = signal<OpcionCatalogo | null>(null);
   readonly panelPrograma = signal(false);
-  readonly panelEntidad = signal(false);
   // Selección temporal del panel (controlada): el side-nav no guarda estado propio.
   readonly programaSelIds = signal<string[]>([]);
-  readonly entidadSelIds = signal<string[]>([]);
   readonly opcionesPrograma = OPCIONES_PROGRAMA;
-  readonly opcionesEntidad = OPCIONES_ENTIDAD;
   readonly columnasCatalogo: SelectionColumn<OpcionCatalogo>[] = [
     { key: 'codigo', label: 'Código', widthClass: 'w-[120px]' },
     { key: 'nombre', label: 'Nombre' },
@@ -169,19 +160,9 @@ export class IndicadorDesempenoDetalleComponent {
     this.panelPrograma.set(true);
   }
 
-  abrirPanelEntidad(): void {
-    this.entidadSelIds.set(this.entidad() ? [this.entidad()!.id] : []);
-    this.panelEntidad.set(true);
-  }
-
   onProgramaAceptado(ids: string[]): void {
     this.programa.set(this.opcionesPrograma.find((o) => o.id === ids[0]) ?? null);
     this.panelPrograma.set(false);
-  }
-
-  onEntidadAceptada(ids: string[]): void {
-    this.entidad.set(this.opcionesEntidad.find((o) => o.id === ids[0]) ?? null);
-    this.panelEntidad.set(false);
   }
 
   etiquetaSeleccion(opcion: OpcionCatalogo | null): string {

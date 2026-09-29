@@ -15,15 +15,14 @@
     </div>
   </div>
 
-  <!-- Entidad responsable -->
+  <!-- Entidad responsable (sin botón de búsqueda, según el diseño) -->
   <div class="flex flex-col gap-siaf-xs">
-    <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+    <div class="flex min-h-10 items-center gap-siaf-md">
       <h4 class="m-0 text-sm font-bold text-text">Entidad responsable del programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
-      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar entidad responsable" siafTooltip="Buscar" (click)="abrirPanelEntidad()" />
     </div>
     <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
       <p class="m-0 text-sm" [class.text-[var(--sys-color-text-neutral-medium)]]="!entidad()" [class.text-text]="entidad()">
-        {{ entidad() ? etiquetaSeleccion(entidad()) : 'No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.' }}
+        {{ entidad() ? etiquetaSeleccion(entidad()) : 'No se ha seleccionado ninguna opción.' }}
       </p>
     </div>
   </div>
@@ -202,20 +201,6 @@
   (selectionChange)="programaSelIds.set($event)"
   (accepted)="onProgramaAceptado($event)"
   (closed)="panelPrograma.set(false)"
-/>
-
-<siaf-selection-side-nav
-  [open]="panelEntidad()"
-  title="Entidad responsable"
-  [rows]="opcionesEntidad"
-  [columns]="columnasCatalogo"
-  idKey="id"
-  searchPlaceholder="Buscar entidad"
-  tableMinWidthClass="min-w-[520px]"
-  [selectedIds]="entidadSelIds()"
-  (selectionChange)="entidadSelIds.set($event)"
-  (accepted)="onEntidadAceptada($event)"
-  (closed)="panelEntidad.set(false)"
 />
 
 <!-- Subidas de archivo -->
