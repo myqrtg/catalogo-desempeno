@@ -10806,7 +10806,7 @@ export const MANIFIESTO_UI_KIT: readonly FichaComponente[] = [
       "siaf-pagination",
       "siaf-table-controls"
     ],
-    "sinUso": true
+    "sinUso": false
   },
   {
     "selector": "siaf-side-nav",

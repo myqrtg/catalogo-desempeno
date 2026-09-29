@@ -1,0 +1,223 @@
+<section class="flex flex-col gap-siaf-lg">
+  <!-- ── DETALLE: programa y entidad ── -->
+  <h3 class="m-0 text-sm font-bold uppercase tracking-[0.02px] text-text">Detalle</h3>
+
+  <!-- Programa presupuestal -->
+  <div class="flex flex-col gap-siaf-xs">
+    <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+      <h4 class="m-0 text-sm font-bold text-text">Programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
+      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar programa presupuestal" siafTooltip="Buscar" (click)="abrirPanelPrograma()" />
+    </div>
+    <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+      <p class="m-0 text-sm" [class.text-[var(--sys-color-text-neutral-medium)]]="!programa()" [class.text-text]="programa()">
+        {{ programa() ? etiquetaSeleccion(programa()) : 'No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Entidad responsable -->
+  <div class="flex flex-col gap-siaf-xs">
+    <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+      <h4 class="m-0 text-sm font-bold text-text">Entidad responsable del programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
+      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar entidad responsable" siafTooltip="Buscar" (click)="abrirPanelEntidad()" />
+    </div>
+    <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+      <p class="m-0 text-sm" [class.text-[var(--sys-color-text-neutral-medium)]]="!entidad()" [class.text-text]="entidad()">
+        {{ entidad() ? etiquetaSeleccion(entidad()) : 'No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- ── DATOS DEL INDICADOR ── -->
+  <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Datos del indicador de desempeño</h3>
+
+  <div class="flex flex-col gap-siaf-xs">
+    <h4 class="m-0 text-sm font-bold text-text">Indicador de desempeño</h4>
+    <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-[220px_1fr]">
+      <siaf-input label="Código" [required]="true" [value]="codigo()" (valueChange)="codigo.set($any($event))" />
+      <siaf-input label="Nombre" [required]="true" [value]="nombre()" (valueChange)="nombre.set($any($event))" />
+    </div>
+  </div>
+
+  <siaf-radio-group label="Nivel de medición" name="nivel-medicion" [inline]="true" [required]="true" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
+
+  <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
+    <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [options]="opcDimension" [value]="dimension()" (valueChange)="dimension.set($any($event))" />
+    <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [options]="opcUnidad" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
+  </div>
+
+  <siaf-radio-group label="Sentido del indicador" name="sentido" [inline]="true" [required]="true" [options]="opcSentido" [value]="sentido()" (valueChange)="sentido.set($event)" />
+
+  <!-- Método de cálculo -->
+  <div class="flex flex-col gap-siaf-md">
+    <h4 class="m-0 text-sm font-bold text-text">Método de cálculo</h4>
+    <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
+    <text-area-control placeholder="Numerador" [required]="true" [maxlength]="4000" [value]="numerador()" (valueChange)="numerador.set($event)" />
+    <text-area-control placeholder="Denominador" [maxlength]="4000" [value]="denominador()" (valueChange)="denominador.set($event)" />
+  </div>
+
+  <!-- Fuentes de información -->
+  <div class="flex flex-col gap-siaf-md">
+    <h4 class="m-0 text-sm font-bold text-text">Fuentes de información</h4>
+    <siaf-input class="md:max-w-[520px]" label="Tipo de fuente de datos" type="select" placeholder="Seleccione" [required]="true" [options]="opcTipoFuente" [value]="tipoFuente()" (valueChange)="tipoFuente.set($any($event))" />
+    <text-area-control placeholder="Fuente de datos" [required]="true" [maxlength]="1000" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
+  </div>
+
+  <!-- Consideraciones técnicas -->
+  <div class="flex flex-col gap-siaf-md">
+    <h4 class="m-0 text-sm font-bold text-text">Consideraciones técnicas</h4>
+    <text-area-control placeholder="Limitación" [required]="true" [maxlength]="1000" [value]="limitacion()" (valueChange)="limitacion.set($event)" />
+    <text-area-control placeholder="Supuestos" [required]="true" [maxlength]="1000" [value]="supuestos()" (valueChange)="supuestos.set($event)" />
+    <text-area-control placeholder="Precisiones técnicas" [required]="true" [maxlength]="1000" [value]="precisiones()" (valueChange)="precisiones.set($event)" />
+    <siaf-input class="md:max-w-[520px]" label="Periodicidad" type="select" placeholder="Seleccione" [required]="true" [options]="opcPeriodicidad" [value]="periodicidad()" (valueChange)="periodicidad.set($any($event))" />
+  </div>
+
+  <!-- ── COBERTURA DE MEDICIÓN ── -->
+  <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Cobertura de medición</h3>
+  <siaf-radio-group label="Alcance geográfico" name="alcance" [inline]="true" [required]="true" [options]="opcAlcance" [value]="alcanceGeografico()" (valueChange)="alcanceGeografico.set($event)" />
+  <siaf-input class="md:max-w-[520px]" label="Nivel responsable del registro" type="select" placeholder="Seleccione" [required]="true" [options]="opcNivelResponsable" [value]="nivelResponsable()" (valueChange)="nivelResponsable.set($any($event))" />
+
+  <!-- ── DESAGREGACIÓN GEOGRÁFICA ── -->
+  <div class="flex flex-col gap-siaf-sm">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Desagregación geográfica de medición</h3>
+    <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+      <div class="grid min-w-[720px] grid-cols-3 gap-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+        <span>Ámbito geográfico</span><span>Área geográfica</span><span>Periodicidad</span>
+      </div>
+      @for (fila of desagregaciones(); track $index) {
+        <div class="grid min-w-[720px] grid-cols-3 items-start gap-siaf-md px-siaf-md py-siaf-sm">
+          <siaf-input type="select" placeholder="Ámbito geográfico" [required]="true" [options]="opcAmbito" [value]="fila.ambito" (valueChange)="actualizarDesagregacion($index, 'ambito', $any($event))" />
+          <siaf-input type="select" placeholder="Área geográfica" [options]="opcArea" [value]="fila.area" (valueChange)="actualizarDesagregacion($index, 'area', $any($event))" />
+          <siaf-input type="select" placeholder="Periodicidad" [options]="opcPeriodicidad" [value]="fila.periodicidad" (valueChange)="actualizarDesagregacion($index, 'periodicidad', $any($event))" />
+        </div>
+      }
+    </div>
+    <siaf-button class="self-start" variant="text" size="sm" icon="add" (click)="agregarDesagregacion()">Agregar Desagregación geográfica</siaf-button>
+  </div>
+
+  <!-- ── DICCIONARIO DE DATOS ── -->
+  <div class="flex flex-col gap-siaf-sm">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Diccionario de datos del indicador <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h3>
+    <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+      <div class="grid min-w-[860px] grid-cols-4 gap-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+        <span>Variable</span><span>Descripción</span><span>Fuente</span><span>Tipo de variable</span>
+      </div>
+      @for (fila of variables(); track $index) {
+        <div class="grid min-w-[860px] grid-cols-4 items-start gap-siaf-md px-siaf-md py-siaf-sm">
+          <siaf-input placeholder="Variable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $any($event))" />
+          <siaf-input placeholder="Descripción" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $any($event))" />
+          <siaf-input placeholder="Fuente" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $any($event))" />
+          <siaf-input placeholder="Tipo de variable" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $any($event))" />
+        </div>
+      }
+    </div>
+    <siaf-button class="self-start" variant="text" size="sm" icon="add" (click)="agregarVariable()">Agregar Variable</siaf-button>
+  </div>
+
+  <!-- ── VALIDACIONES ── -->
+  <div class="flex flex-col gap-siaf-sm">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Validaciones <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h3>
+    <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+      <div class="grid min-w-[680px] grid-cols-2 gap-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+        <span>Elemento</span><span>Descripción</span>
+      </div>
+      @for (fila of validaciones(); track $index) {
+        <div class="grid min-w-[680px] grid-cols-2 items-start gap-siaf-md px-siaf-md py-siaf-sm">
+          <text-area-control placeholder="Elemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" />
+          <text-area-control placeholder="Descripción" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
+        </div>
+      }
+    </div>
+    <siaf-button class="self-start" variant="text" size="sm" icon="add" (click)="agregarValidacion()">Agregar Validación</siaf-button>
+  </div>
+
+  <!-- ── CÓDIGO COMENTADO ── -->
+  <div class="flex flex-col gap-siaf-xs">
+    <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+      <h3 class="m-0 text-sm font-bold uppercase tracking-[0.02px] text-text">Código comentado <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h3>
+      <siaf-button variant="secondary" size="md" icon="file_upload" [iconOnly]="true" ariaLabel="Subir código comentado" (click)="panelCodigoComentado.set(true)" />
+    </div>
+    @if (codigoComentado()) {
+      <siaf-uploaded-file-card [file]="codigoComentado()" (replace)="panelCodigoComentado.set(true)" (removed)="codigoComentado.set(null)" />
+    } @else {
+      <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se han adjuntado archivos. Por favor, haga clic en el botón para subir un archivo.</p>
+      </div>
+    }
+  </div>
+
+  <!-- ── VIGENCIA EN PROCESOS ── -->
+  <div class="flex flex-col gap-siaf-md">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Vigencia en procesos</h3>
+    <siaf-radio-group label="Programación (P)" name="programacion" [inline]="true" [required]="true" [options]="opcSiNo" [value]="programacion()" (valueChange)="programacion.set($event)" />
+    <siaf-radio-group label="Gestión (G)" name="gestion" [inline]="true" [required]="true" [options]="opcSiNo" [value]="gestion()" (valueChange)="gestion.set($event)" />
+    <siaf-radio-group label="Evaluación (E)" name="evaluacion" [inline]="true" [required]="true" [options]="opcSiNo" [value]="evaluacion()" (valueChange)="evaluacion.set($event)" />
+  </div>
+
+  <!-- ── MEDICIÓN (asignada al aceptar) ── -->
+  <div class="flex flex-col gap-siaf-md">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Medición</h3>
+    <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
+      <siaf-date-time-picker label="Año de inicio de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+      <siaf-date-time-picker label="Año de fin de medición" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+    </div>
+  </div>
+
+  <!-- ── VIGENCIA (asignada al aceptar) ── -->
+  <div class="flex flex-col gap-siaf-md">
+    <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Vigencia</h3>
+    <siaf-radio-group label="Estado" name="estado-vigencia" [inline]="true" [disabled]="true" [options]="opcSiNo" [value]="estadoVigencia()" />
+    <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
+      <siaf-date-time-picker label="Fecha desde" [required]="true" [fullWidth]="true" [disabled]="true" hint="Será asignada cuando se acepte el requerimiento de solicitud" />
+      <siaf-date-time-picker label="Fecha hasta" [fullWidth]="true" [disabled]="true" />
+    </div>
+  </div>
+
+  <!-- ── DOCUMENTO DE SUSTENTO ── -->
+  <div class="flex flex-col gap-siaf-xs">
+    <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+      <h3 class="m-0 text-sm font-bold uppercase tracking-[0.02px] text-text">Documento de sustento de solicitud <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h3>
+      <siaf-button variant="accent" size="md" icon="file_upload" [iconOnly]="true" ariaLabel="Subir documento de sustento" (click)="panelSustento.set(true)" />
+    </div>
+    @if (sustento()) {
+      <siaf-uploaded-file-card [file]="sustento()" (replace)="panelSustento.set(true)" (removed)="sustento.set(null)" />
+    } @else {
+      <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+        <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se han adjuntado archivos. Por favor, haga clic en el botón para subir un archivo.</p>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Paneles de selección -->
+<siaf-selection-side-nav
+  [open]="panelPrograma()"
+  title="Programa presupuestal"
+  [rows]="opcionesPrograma"
+  [columns]="columnasCatalogo"
+  idKey="id"
+  searchPlaceholder="Buscar programa"
+  tableMinWidthClass="min-w-[520px]"
+  [selectedIds]="programaSelIds()"
+  (selectionChange)="programaSelIds.set($event)"
+  (accepted)="onProgramaAceptado($event)"
+  (closed)="panelPrograma.set(false)"
+/>
+
+<siaf-selection-side-nav
+  [open]="panelEntidad()"
+  title="Entidad responsable"
+  [rows]="opcionesEntidad"
+  [columns]="columnasCatalogo"
+  idKey="id"
+  searchPlaceholder="Buscar entidad"
+  tableMinWidthClass="min-w-[520px]"
+  [selectedIds]="entidadSelIds()"
+  (selectionChange)="entidadSelIds.set($event)"
+  (accepted)="onEntidadAceptada($event)"
+  (closed)="panelEntidad.set(false)"
+/>
+
+<!-- Subidas de archivo -->
+<siaf-upload-side-nav [open]="panelCodigoComentado()" title="Cargar código comentado" (closed)="panelCodigoComentado.set(false)" (confirmed)="onCodigoComentadoConfirmado($event)" />
+<siaf-upload-side-nav [open]="panelSustento()" title="Cargar documento de sustento" (closed)="panelSustento.set(false)" (confirmed)="onSustentoConfirmado($event)" />
