@@ -91,8 +91,9 @@ function rolDe(perfil: PerfilItem): { codigo: string; nombre: string } {
 // ─── Autenticación ─────────────────────────────────────────────────
 
 function respuestaLogin(usuario: UsuarioDemo): LoginResponse {
-  const perfilActivo = usuario.perfiles[0];
-  return { accessToken: firmarToken(usuario, perfilActivo), debeCambiarPassword: false, perfilActivo, perfilesDisponibles: usuario.perfiles };
+  // El backend real entrega el nombre del usuario junto al perfil; acá lo adjuntamos para la barra superior.
+  const perfiles = usuario.perfiles.map((p) => ({ ...p, nombre: usuario.nombre ?? null }));
+  return { accessToken: firmarToken(usuario, perfiles[0]), debeCambiarPassword: false, perfilActivo: perfiles[0], perfilesDisponibles: perfiles };
 }
 
 const login: Manejador = ({ req }) => {
@@ -111,8 +112,9 @@ const refresh: Manejador = ({ sesion }) => {
 const cambiarPerfil: Manejador = ({ req, sesion }) => {
   if (!sesion) return error(401, 'Sesión expirada.');
   const { perfilId } = (req.body ?? {}) as { perfilId?: string };
-  const perfil = sesion.usuario.perfiles.find((p) => p.id === perfilId);
-  if (!perfil) return error(404, 'El perfil no pertenece al usuario.');
+  const perfilBase = sesion.usuario.perfiles.find((p) => p.id === perfilId);
+  if (!perfilBase) return error(404, 'El perfil no pertenece al usuario.');
+  const perfil = { ...perfilBase, nombre: sesion.usuario.nombre ?? null };
   const respuesta: CambiarPerfilResponse = { accessToken: firmarToken(sesion.usuario, perfil), perfilActivo: perfil };
   return ok(respuesta);
 };

@@ -18,6 +18,8 @@ export interface UsuarioDemo {
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
+  /** Nombre a mostrar en la barra superior; si falta, la UI cae al rol del perfil. */
+  nombre?: string;
   /** Qué muestra en el panel de usuarios del login. */
   descripcion: string;
   perfiles: PerfilItem[];
@@ -53,6 +55,7 @@ export const USUARIOS_DEMO: UsuarioDemo[] = [
     nombres: 'Ana',
     apellidoPaterno: 'Torres',
     apellidoMaterno: 'Díaz',
+    nombre: 'Juan Doe Perez Perez',
     descripcion: 'Creador: registra y verifica solicitudes',
     perfiles: [perfil('perfil-ana-creador', 'CREADOR', 'Creador', 'Operador de cuentas bancarias')],
   },

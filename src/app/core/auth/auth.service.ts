@@ -176,7 +176,7 @@ export class AuthService {
   /** Vuelca todos los campos del perfil al CurrentUserService + Permissions. */
   private hydrateCurrentUser(p: PerfilItem): void {
     this.currentUser.setUser({
-      name: p.rol,
+      name: p.nombre ?? p.rol,
       office: buildOfficeLabel(p),
       entidadId: p.entidadId ?? null,
       entidadSiglas: p.entidadSiglas ?? null,
