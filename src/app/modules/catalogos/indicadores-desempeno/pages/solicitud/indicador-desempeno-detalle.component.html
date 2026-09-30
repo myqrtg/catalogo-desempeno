@@ -104,9 +104,9 @@
   <!-- Consideraciones técnicas -->
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Consideraciones técnicas</h4>
-    <text-area-control placeholder="Limitación" [required]="true" [maxlength]="1000" [value]="limitacion()" (valueChange)="limitacion.set($event)" />
-    <text-area-control placeholder="Supuestos" [required]="true" [maxlength]="1000" [value]="supuestos()" (valueChange)="supuestos.set($event)" />
-    <text-area-control placeholder="Precisiones técnicas" [required]="true" [maxlength]="1000" [value]="precisiones()" (valueChange)="precisiones.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Limitación" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasLimitacion" [value]="limitacion()" (valueChange)="limitacion.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Supuestos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasSupuestos" [value]="supuestos()" (valueChange)="supuestos.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Precisiones técnicas" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasPrecisiones" [value]="precisiones()" (valueChange)="precisiones.set($event)" />
     <siaf-input class="md:max-w-[520px]" label="Periodicidad" type="select" placeholder="Seleccione" [required]="true" [options]="opcPeriodicidad" [value]="periodicidad()" (valueChange)="periodicidad.set($any($event))" />
   </div>
 

@@ -45,6 +45,27 @@ const SUGERENCIAS_FUENTE: string[] = [
   'Censos Nacionales (INEI)',
 ];
 
+const SUGERENCIAS_LIMITACION: string[] = [
+  'La principal limitación del indicador es que la información recogida se basa en la declaración de las informantes, por lo cual, puede no ser una medición muy precisa, por problemas de recordación o conocimiento.',
+  'La cobertura de la encuesta no permite estimaciones a nivel distrital.',
+  'El indicador depende de la calidad del registro administrativo, que puede presentar subregistro.',
+  'Los resultados no son comparables entre periodos cuando cambia la metodología de la fuente.',
+];
+
+const SUGERENCIAS_SUPUESTOS: string[] = [
+  '-',
+  'Se asume que la fuente de datos mantiene su cobertura y periodicidad en el tiempo.',
+  'Se asume que la declaración de las informantes es veraz.',
+  'Se asume que no hay cambios metodológicos en el periodo de medición.',
+];
+
+const SUGERENCIAS_PRECISIONES: string[] = [
+  'Parto Institucional:\nLa variable Parto Institucional se construye a partir de las preguntas del Cuestionario Individual, Sección 4ª (Embarazo, parto, puerperio y lactancia).',
+  'El indicador se calcula sobre la población objetivo definida en el marco lógico del programa presupuestal.',
+  'Los valores se expresan en porcentaje con un decimal.',
+  'Se excluyen del cálculo los registros con información inconsistente o incompleta.',
+];
+
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
   codigo: string;
@@ -237,6 +258,9 @@ export class IndicadorDesempenoDetalleComponent {
   readonly sugerenciasNumerador = SUGERENCIAS_NUMERADOR;
   readonly sugerenciasDenominador = SUGERENCIAS_DENOMINADOR;
   readonly sugerenciasFuente = SUGERENCIAS_FUENTE;
+  readonly sugerenciasLimitacion = SUGERENCIAS_LIMITACION;
+  readonly sugerenciasSupuestos = SUGERENCIAS_SUPUESTOS;
+  readonly sugerenciasPrecisiones = SUGERENCIAS_PRECISIONES;
 
   // ── Aceptar ───────────────────────────────────────────────────────
   aceptarHabilitado(): boolean {
