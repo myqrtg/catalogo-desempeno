@@ -156,22 +156,33 @@ export class IndicadorDesempenoDetalleComponent {
   readonly variables = signal<FilaVariable[]>([
     { variable: 'PART_INST', descripcion: 'Identifica si el último parto ocurrió en un establecimiento de salud', fuente: 'Encuesta', tipoVariable: 'Categórica dicotómica' },
     { variable: 'Part_estab', descripcion: 'Variable auxiliar que identifica si el establecimiento de salud es público o privado', fuente: 'Encuesta (M15)', tipoVariable: 'Categórica dicotómica' },
+    { variable: 'M15', descripcion: 'Lugar donde ocurrió el parto.', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+    { variable: 'M3A', descripcion: 'La atendió en el parto: Médico', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+    { variable: 'M3B', descripcion: 'La atendió en el parto: Enfermera', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+    { variable: 'M3C', descripcion: 'La atendió en el parto: Obstetra', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+    { variable: 'M3N', descripcion: 'La atendió en el parto: Nadie', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
   ]);
-  readonly validaciones = signal<FilaValidacion[]>([{ elemento: '', descripcion: '' }]);
+  readonly validaciones = signal<FilaValidacion[]>([
+    { elemento: 'Lugar del parto', descripcion: 'Se consideran institucionales los partos ocurridos en establecimientos de salud codificados entre 21-27, 31-32 y 41-42 en la variable M15.' },
+    { elemento: 'Parto institucional', descripcion: 'Se asigna valor 1 cuando el parto ocurrió en un establecimiento de salud y fue atendido por un profesional de salud registrado en M3A, M3B o M3C.' },
+    { elemento: 'Parto no institucional', descripcion: 'Se asigna valor 0 cuando el parto no ocurrió en un establecimiento de salud y no fue atendido por personal de salud (M3N=0).' },
+    { elemento: 'Valores finales', descripcion: 'PART_INST: 1 = Sí, 0 = No.' },
+    { elemento: 'Consistencia', descripcion: 'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.' },
+  ]);
 
-  // ── Archivos ──────────────────────────────────────────────────────
-  readonly codigoComentado = signal<UploadedFileInfo | null>(null);
-  readonly sustento = signal<UploadedFileInfo | null>(null);
+  // ── Archivos (prellenados de ejemplo) ─────────────────────────────
+  readonly codigoComentado = signal<UploadedFileInfo | null>({ name: 'Código comentado.pdf' });
+  readonly sustento = signal<UploadedFileInfo | null>({ name: 'Sustento.pdf' });
   readonly panelCodigoComentado = signal(false);
   readonly panelSustento = signal(false);
 
-  // ── Vigencia en procesos ──────────────────────────────────────────
-  readonly programacion = signal('');
-  readonly gestion = signal('');
-  readonly evaluacion = signal('');
+  // ── Vigencia en procesos (prellenada de ejemplo) ──────────────────
+  readonly programacion = signal('SI');
+  readonly gestion = signal('SI');
+  readonly evaluacion = signal('NO');
 
   // ── Vigencia ──────────────────────────────────────────────────────
-  readonly estadoVigencia = signal('');
+  readonly estadoVigencia = signal('SI');
 
   // ── Opciones de selects y radios ──────────────────────────────────
   readonly opcNivelMedicion = [
