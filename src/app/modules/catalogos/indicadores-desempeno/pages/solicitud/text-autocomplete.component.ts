@@ -12,6 +12,7 @@ import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-con
   selector: 'siaf-text-autocomplete',
   standalone: true,
   imports: [TextFieldComponent, TextAreaControlComponent],
+  styles: ':host { display: block; min-width: 0; }',
   template: `
     <div class="relative">
       @if (multiline) {
