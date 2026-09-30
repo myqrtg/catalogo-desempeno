@@ -50,7 +50,7 @@
     <h4 class="m-0 text-sm font-bold text-text">Indicador de desempeño</h4>
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-[220px_1fr]">
       <siaf-input label="Código" [required]="true" [value]="codigo()" (valueChange)="codigo.set($any($event))" />
-      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador" [value]="nombre()" (valueChange)="nombre.set($event)" />
+      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador" [value]="nombre()" (valueChange)="nombre.set($event)" (selected)="onNombreSeleccionado($event)" />
     </div>
   </div>
 

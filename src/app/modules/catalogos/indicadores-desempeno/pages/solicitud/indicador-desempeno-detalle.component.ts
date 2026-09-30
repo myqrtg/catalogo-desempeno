@@ -22,6 +22,27 @@ const NOMBRES_INDICADOR: string[] = [
   'Cobertura de control prenatal con enfoque de riesgo',
 ];
 
+/** Bloque «Datos del indicador» que autocompleta el registro al elegir un indicador conocido. */
+interface DatosIndicador {
+  dimension: string;
+  unidadMedida: string;
+  sentido: string;
+  tipoCalculo: string;
+  numerador: string;
+  denominador: string;
+}
+
+const DATOS_POR_INDICADOR: Record<string, DatosIndicador> = {
+  'Cobertura de parto institucional': {
+    dimension: 'eficacia',
+    unidadMedida: 'Porcentaje',
+    sentido: 'Subir',
+    tipoCalculo: 'numerador',
+    numerador: 'total de mujeres que tuvieron nacimiento vivo atendido por personal de salud calificado en establecimientos de salud en los últimos cinco años.',
+    denominador: 'total de mujeres que tuvieron nacimiento vivo en los últimos cinco años.',
+  },
+};
+
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
   codigo: string;
@@ -100,8 +121,7 @@ export class IndicadorDesempenoDetalleComponent {
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
 
   // ── Selección de programa y entidad ───────────────────────────────
-  // Prellenado con datos de ejemplo (0002 Salud Materno Neonatal).
-  readonly programa = signal<ProgramaPresupuestal | null>(OPCIONES_PROGRAMA[0]);
+  readonly programa = signal<ProgramaPresupuestal | null>(null);
   readonly modalPrograma = signal(false);
 
   // Filas y columnas del modal de selección.
@@ -111,8 +131,8 @@ export class IndicadorDesempenoDetalleComponent {
     { key: 'nombre', label: 'Nombre programa' },
   ];
 
-  // Producto (aparece solo cuando el nivel de medición es «2. Producto»); prellenado de ejemplo.
-  readonly producto = signal<ProductoPresupuestal | null>(OPCIONES_PRODUCTO[0]);
+  // Producto (aparece solo cuando el nivel de medición es «2. Producto»).
+  readonly producto = signal<ProductoPresupuestal | null>(null);
   readonly modalProducto = signal(false);
   readonly filasProducto: CatalogRow[] = OPCIONES_PRODUCTO.map((p) => ({ id: p.id, codigo: p.codigo, nombre: p.nombre }));
   readonly columnasProducto: CatalogColumn[] = [
@@ -120,69 +140,45 @@ export class IndicadorDesempenoDetalleComponent {
     { key: 'nombre', label: 'Nombre producto' },
   ];
 
-  // ── Datos del indicador (prellenado con data cualitativa de ejemplo) ──
+  // ── Datos del indicador ───────────────────────────────────────────
   readonly codigo = signal('');
-  readonly nombre = signal('Cobertura de parto institucional');
-  readonly nivelMedicion = signal('2. Producto');
-  readonly dimension = signal('eficacia');
-  readonly unidadMedida = signal('Porcentaje');
-  readonly sentido = signal('Subir');
-  readonly tipoCalculo = signal('numerador');
-  readonly numerador = signal('total de mujeres que tuvieron nacimiento vivo atendido por personal de salud calificado en establecimientos de salud en los últimos cinco años.');
-  readonly denominador = signal('total de mujeres que tuvieron nacimiento vivo en los últimos cinco años.');
-  readonly tipoFuente = signal('INEI');
-  readonly fuenteDatos = signal('ENCUESTA DEMOGRAFICA Y DE SALUD FAMILIAR (ENDES)');
-  readonly limitacion = signal('La principal limitación del indicador es que la información recogida se basa en la declaración de las informantes, por lo cual, puede no ser una medición muy precisa, por problemas de recordación o conocimiento.');
-  readonly supuestos = signal('-');
-  readonly precisiones = signal(
-    'Parto Institucional:\n' +
-    'La variable Parto Institucional se construye a partir de las preguntas del Cuestionario Individual, Sección 4ª (Embarazo, parto, puerperio y lactancia):\n' +
-    '• Pregunta 426: ¿Quién la atendió en el parto de (NOMBRE)?; respondieron las alternativas: A (Médico), B (Obstetríz) o C (Enfermera).',
-  );
-  readonly periodicidad = signal('Semestral');
+  readonly nombre = signal('');
+  readonly nivelMedicion = signal('');
+  readonly dimension = signal('');
+  readonly unidadMedida = signal('');
+  readonly sentido = signal('');
+  readonly tipoCalculo = signal('');
+  readonly numerador = signal('');
+  readonly denominador = signal('');
+  readonly tipoFuente = signal('');
+  readonly fuenteDatos = signal('');
+  readonly limitacion = signal('');
+  readonly supuestos = signal('');
+  readonly precisiones = signal('');
+  readonly periodicidad = signal('');
 
   // ── Cobertura de medición ─────────────────────────────────────────
-  readonly alcanceGeografico = signal('Nacional y regional');
-  readonly nivelResponsable = signal('Nacional');
+  readonly alcanceGeografico = signal('');
+  readonly nivelResponsable = signal('');
 
-  // ── Tablas dinámicas (prellenadas de ejemplo) ─────────────────────
-  readonly desagregaciones = signal<FilaDesagregacion[]>([
-    { ambito: '7 CALLAO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
-    { ambito: '9 HUANCAVELICA', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
-    { ambito: '8 CUSCO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
-    { ambito: '10 HUANUCO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
-    { ambito: '6 CAJAMARCA', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
-  ]);
-  readonly variables = signal<FilaVariable[]>([
-    { variable: 'PART_INST', descripcion: 'Identifica si el último parto ocurrió en un establecimiento de salud', fuente: 'Encuesta', tipoVariable: 'Categórica dicotómica' },
-    { variable: 'Part_estab', descripcion: 'Variable auxiliar que identifica si el establecimiento de salud es público o privado', fuente: 'Encuesta (M15)', tipoVariable: 'Categórica dicotómica' },
-    { variable: 'M15', descripcion: 'Lugar donde ocurrió el parto.', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
-    { variable: 'M3A', descripcion: 'La atendió en el parto: Médico', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
-    { variable: 'M3B', descripcion: 'La atendió en el parto: Enfermera', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
-    { variable: 'M3C', descripcion: 'La atendió en el parto: Obstetra', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
-    { variable: 'M3N', descripcion: 'La atendió en el parto: Nadie', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
-  ]);
-  readonly validaciones = signal<FilaValidacion[]>([
-    { elemento: 'Lugar del parto', descripcion: 'Se consideran institucionales los partos ocurridos en establecimientos de salud codificados entre 21-27, 31-32 y 41-42 en la variable M15.' },
-    { elemento: 'Parto institucional', descripcion: 'Se asigna valor 1 cuando el parto ocurrió en un establecimiento de salud y fue atendido por un profesional de salud registrado en M3A, M3B o M3C.' },
-    { elemento: 'Parto no institucional', descripcion: 'Se asigna valor 0 cuando el parto no ocurrió en un establecimiento de salud y no fue atendido por personal de salud (M3N=0).' },
-    { elemento: 'Valores finales', descripcion: 'PART_INST: 1 = Sí, 0 = No.' },
-    { elemento: 'Consistencia', descripcion: 'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.' },
-  ]);
+  // ── Tablas dinámicas ──────────────────────────────────────────────
+  readonly desagregaciones = signal<FilaDesagregacion[]>([{ ambito: '', area: '', periodicidad: '' }]);
+  readonly variables = signal<FilaVariable[]>([{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
+  readonly validaciones = signal<FilaValidacion[]>([{ elemento: '', descripcion: '' }]);
 
-  // ── Archivos (prellenados de ejemplo) ─────────────────────────────
-  readonly codigoComentado = signal<UploadedFileInfo | null>({ name: 'Código comentado.pdf' });
-  readonly sustento = signal<UploadedFileInfo | null>({ name: 'Sustento.pdf' });
+  // ── Archivos ──────────────────────────────────────────────────────
+  readonly codigoComentado = signal<UploadedFileInfo | null>(null);
+  readonly sustento = signal<UploadedFileInfo | null>(null);
   readonly panelCodigoComentado = signal(false);
   readonly panelSustento = signal(false);
 
-  // ── Vigencia en procesos (prellenada de ejemplo) ──────────────────
-  readonly programacion = signal('SI');
-  readonly gestion = signal('SI');
-  readonly evaluacion = signal('NO');
+  // ── Vigencia en procesos ──────────────────────────────────────────
+  readonly programacion = signal('');
+  readonly gestion = signal('');
+  readonly evaluacion = signal('');
 
   // ── Vigencia ──────────────────────────────────────────────────────
-  readonly estadoVigencia = signal('SI');
+  readonly estadoVigencia = signal('');
 
   // ── Opciones de selects y radios ──────────────────────────────────
   readonly opcNivelMedicion = [
@@ -280,6 +276,22 @@ export class IndicadorDesempenoDetalleComponent {
   onDimensionChange(valor: string): void {
     this.dimension.set(valor);
     this.unidadMedida.set('');
+  }
+
+  /**
+   * Al elegir un indicador conocido en el autocomplete del Nombre, se autocompletan los «Datos del indicador»
+   * de ese registro (dimensión, unidad, sentido y método de cálculo). El texto libre no autocompleta nada.
+   */
+  onNombreSeleccionado(nombre: string): void {
+    this.nombre.set(nombre);
+    const datos = DATOS_POR_INDICADOR[nombre];
+    if (!datos) return;
+    this.dimension.set(datos.dimension);
+    this.unidadMedida.set(datos.unidadMedida);
+    this.sentido.set(datos.sentido);
+    this.tipoCalculo.set(datos.tipoCalculo);
+    this.numerador.set(datos.numerador);
+    this.denominador.set(datos.denominador);
   }
 
   // ── Tablas dinámicas ──────────────────────────────────────────────

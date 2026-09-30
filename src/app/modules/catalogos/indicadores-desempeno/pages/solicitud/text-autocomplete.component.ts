@@ -56,6 +56,8 @@ export class TextAutocompleteComponent {
   @Input() max = 8;
 
   @Output() valueChange = new EventEmitter<string>();
+  /** Se emite solo cuando el usuario elige una sugerencia (no al escribir texto libre). */
+  @Output() selected = new EventEmitter<string>();
 
   private readonly _suggestions = signal<string[]>([]);
   readonly abierto = signal(false);
@@ -78,6 +80,7 @@ export class TextAutocompleteComponent {
     this.value = sugerencia;
     this.abierto.set(false);
     this.valueChange.emit(sugerencia);
+    this.selected.emit(sugerencia);
   }
 
   @HostListener('document:pointerdown', ['$event'])
