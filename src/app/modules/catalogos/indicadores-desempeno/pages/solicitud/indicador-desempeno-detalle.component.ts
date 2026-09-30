@@ -243,7 +243,7 @@ export class IndicadorDesempenoDetalleComponent {
     (this.unidadesPorDimension[this.dimension()] ?? []).map((v) => ({ value: v, label: v })),
   );
   readonly opcTipoFuente = ['INEI', 'Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
-  readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral', 'Mensual'].map((v) => ({ value: v, label: v }));
+  readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
   readonly opcNivelResponsable = ['Nacional', 'Regional', 'Local'].map((v) => ({ value: v, label: v }));
   // Catálogos de la desagregación geográfica (departamentos, área y periodicidad numeradas).
   readonly opcAmbito = [
