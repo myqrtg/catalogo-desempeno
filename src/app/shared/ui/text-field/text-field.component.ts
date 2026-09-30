@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, forwardRef, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter, forwardRef, HostListener, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 import { IconComponent } from '../icon/icon.component';
@@ -139,7 +139,6 @@ export type TextFieldState = 'enabled' | 'error' | 'success';
           </button>
 
           @if (selectOpen) {
-            <button class="fixed inset-0 z-30 cursor-default bg-transparent" type="button" data-capa-cierre tabindex="-1" aria-hidden="true" (mousedown)="$event.preventDefault()" (click)="closeSelect()"></button>
             <div class="relative z-40 mt-siaf-xs sm:absolute sm:left-0 sm:right-0 sm:top-[calc(100%+4px)] sm:mt-0" siafFoco [siafFocoAtrapar]="false" (siafFocoEscape)="closeSelect()" (siafFocoSalida)="closeSelect()">
               <siaf-select-options
                 [options]="selectOptions"
@@ -198,7 +197,6 @@ export type TextFieldState = 'enabled' | 'error' | 'success';
           </button>
 
           @if (selectOpen) {
-            <button class="fixed inset-0 z-30 cursor-default bg-transparent" type="button" data-capa-cierre tabindex="-1" aria-hidden="true" (mousedown)="$event.preventDefault()" (click)="closeSelect()"></button>
             <div class="relative z-40 mt-siaf-xs sm:absolute sm:left-0 sm:right-0 sm:top-[calc(100%+4px)] sm:mt-0" siafFoco [siafFocoAtrapar]="false" (siafFocoEscape)="closeSelect()" (siafFocoSalida)="closeSelect()">
               <siaf-select-options
                 [options]="selectOptions"
@@ -272,6 +270,20 @@ export type TextFieldState = 'enabled' | 'error' | 'success';
 })
 export class TextFieldComponent implements OnChanges, ControlValueAccessor {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  /**
+   * Cierra la lista del select al pulsar fuera SIN consumir el clic (a diferencia de una capa a pantalla
+   * completa): así un solo clic cierra este select y a la vez activa el control que se pulsó (p. ej. pasar de
+   * «Dimensión» a «Unidad de medida»).
+   */
+  @HostListener('document:pointerdown', ['$event'])
+  onDocumentPointerDown(event: Event): void {
+    if (!this.selectOpen) return;
+    const target = event.target;
+    if (target instanceof Node && this.host.nativeElement.contains(target)) return;
+    this.closeSelect();
+  }
 
   @Input() label = '';
   @Input() placeholder = '';
