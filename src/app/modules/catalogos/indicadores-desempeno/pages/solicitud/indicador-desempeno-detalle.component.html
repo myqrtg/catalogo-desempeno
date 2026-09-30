@@ -80,8 +80,8 @@
   }
 
   <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
-    <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [options]="opcDimension" [value]="dimension()" (valueChange)="dimension.set($any($event))" />
-    <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [options]="opcUnidad" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
+    <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [options]="opcDimension" [value]="dimension()" (valueChange)="onDimensionChange($any($event))" />
+    <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [disabled]="!dimension()" [options]="opcUnidad()" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
   </div>
 
   <siaf-radio-group label="Sentido del indicador" name="sentido" [inline]="true" [required]="true" [options]="opcSentido" [value]="sentido()" (valueChange)="sentido.set($event)" />

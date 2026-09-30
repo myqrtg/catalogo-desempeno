@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, signal } from '@angular/core';
 
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DateTimePickerComponent } from '../../../../../shared/ui/date-time-picker/date-time-picker.component';
@@ -180,8 +180,24 @@ export class IndicadorDesempenoDetalleComponent {
     { label: 'Sí', value: 'SI' },
     { label: 'No', value: 'NO' },
   ];
-  readonly opcDimension = ['Eficacia', 'Eficiencia', 'Calidad', 'Economía'].map((v) => ({ value: v, label: v }));
-  readonly opcUnidad = ['Porcentaje', 'Número', 'Tasa', 'Ratio', 'Índice'].map((v) => ({ value: v, label: v }));
+  readonly opcDimension = [
+    { value: 'eficacia', label: '1. Eficacia' },
+    { value: 'eficiencia', label: '2. Eficiencia' },
+    { value: 'calidad', label: '3. Calidad' },
+    { value: 'economia', label: '4. Economía' },
+  ];
+
+  // Unidades de medida por dimensión (solo «Eficacia» está confirmada por el diseño; el resto son de ejemplo).
+  private readonly unidadesPorDimension: Record<string, string[]> = {
+    eficacia: ['Porcentaje', 'Tasa', 'Ratio', 'Índice'],
+    eficiencia: ['Porcentaje', 'Tasa', 'Ratio'],
+    calidad: ['Porcentaje', 'Índice', 'Nivel de satisfacción'],
+    economia: ['Soles', 'Porcentaje', 'Ratio'],
+  };
+
+  readonly opcUnidad = computed(() =>
+    (this.unidadesPorDimension[this.dimension()] ?? []).map((v) => ({ value: v, label: v })),
+  );
   readonly opcTipoFuente = ['Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral', 'Mensual'].map((v) => ({ value: v, label: v }));
   readonly opcNivelResponsable = ['Nacional', 'Regional', 'Local'].map((v) => ({ value: v, label: v }));
@@ -226,6 +242,12 @@ export class IndicadorDesempenoDetalleComponent {
 
   limpiarProducto(): void {
     this.producto.set(null);
+  }
+
+  /** Cambiar la dimensión reinicia la unidad de medida (sus opciones dependen de la dimensión). */
+  onDimensionChange(valor: string): void {
+    this.dimension.set(valor);
+    this.unidadMedida.set('');
   }
 
   // ── Tablas dinámicas ──────────────────────────────────────────────
