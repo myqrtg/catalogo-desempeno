@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, sig
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DateTimePickerComponent } from '../../../../../shared/ui/date-time-picker/date-time-picker.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
-import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-control/text-area-control.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { UploadSideNavComponent } from '../../../../../shared/ui/upload-side-nav/upload-side-nav.component';
 import { UploadedFileCardComponent, UploadedFileInfo } from '../../../../../shared/ui/uploaded-file-card/uploaded-file-card.component';
@@ -64,6 +63,30 @@ const SUGERENCIAS_PRECISIONES: string[] = [
   'El indicador se calcula sobre la población objetivo definida en el marco lógico del programa presupuestal.',
   'Los valores se expresan en porcentaje con un decimal.',
   'Se excluyen del cálculo los registros con información inconsistente o incompleta.',
+];
+
+// ── Sugerencias del Diccionario de datos del indicador ──
+const SUG_DICC_VARIABLE: string[] = ['PART_INST', 'Part_estab', 'M15', 'M3A', 'M3B', 'M3C', 'M3N'];
+const SUG_DICC_DESCRIPCION: string[] = [
+  'Identifica si el último parto ocurrió en un establecimiento de salud',
+  'Variable auxiliar que identifica si el establecimiento de salud es público o privado',
+  'Lugar donde ocurrió el parto.',
+  'La atendió en el parto: Médico',
+  'La atendió en el parto: Enfermera',
+  'La atendió en el parto: Obstetra',
+  'La atendió en el parto: Nadie',
+];
+const SUG_DICC_FUENTE: string[] = ['Encuesta', 'Encuesta (M15)', 'Base de datos de encuesta'];
+const SUG_DICC_TIPO: string[] = ['Categórica dicotómica', 'Categórica', 'Numérica', 'Continua'];
+
+// ── Sugerencias de las Validaciones ──
+const SUG_VALID_ELEMENTO: string[] = ['Lugar del parto', 'Parto institucional', 'Parto no institucional', 'Valores finales', 'Consistencia'];
+const SUG_VALID_DESCRIPCION: string[] = [
+  'Se consideran institucionales los partos ocurridos en establecimientos de salud codificados entre 21-27, 31-32 y 41-42 en la variable M15.',
+  'Se asigna valor 1 cuando el parto ocurrió en un establecimiento de salud y fue atendido por un profesional de salud registrado en M3A, M3B o M3C.',
+  'Se asigna valor 0 cuando el parto no ocurrió en un establecimiento de salud y no fue atendido por personal de salud (M3N=0).',
+  'PART_INST: 1 = Sí, 0 = No.',
+  'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.',
 ];
 
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
@@ -128,7 +151,6 @@ interface FilaValidacion { elemento: string; descripcion: string; }
     ButtonComponent,
     RadioComponent,
     TextFieldComponent,
-    TextAreaControlComponent,
     DateTimePickerComponent,
     UploadSideNavComponent,
     UploadedFileCardComponent,
@@ -261,6 +283,12 @@ export class IndicadorDesempenoDetalleComponent {
   readonly sugerenciasLimitacion = SUGERENCIAS_LIMITACION;
   readonly sugerenciasSupuestos = SUGERENCIAS_SUPUESTOS;
   readonly sugerenciasPrecisiones = SUGERENCIAS_PRECISIONES;
+  readonly sugDiccVariable = SUG_DICC_VARIABLE;
+  readonly sugDiccDescripcion = SUG_DICC_DESCRIPCION;
+  readonly sugDiccFuente = SUG_DICC_FUENTE;
+  readonly sugDiccTipo = SUG_DICC_TIPO;
+  readonly sugValidElemento = SUG_VALID_ELEMENTO;
+  readonly sugValidDescripcion = SUG_VALID_DESCRIPCION;
 
   // ── Aceptar ───────────────────────────────────────────────────────
   aceptarHabilitado(): boolean {

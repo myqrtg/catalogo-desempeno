@@ -142,10 +142,10 @@
       </div>
       @for (fila of variables(); track $index) {
         <div class="grid min-w-[860px] grid-cols-4 items-start gap-siaf-md px-siaf-md py-siaf-sm">
-          <siaf-input placeholder="Variable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $any($event))" />
-          <siaf-input placeholder="Descripción" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $any($event))" />
-          <siaf-input placeholder="Fuente" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $any($event))" />
-          <siaf-input placeholder="Tipo de variable" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $any($event))" />
+          <siaf-text-autocomplete placeholder="Variable" [suggestions]="sugDiccVariable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $event)" />
+          <siaf-text-autocomplete placeholder="Descripción" [suggestions]="sugDiccDescripcion" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $event)" />
+          <siaf-text-autocomplete placeholder="Fuente" [suggestions]="sugDiccFuente" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $event)" />
+          <siaf-text-autocomplete placeholder="Tipo de variable" [suggestions]="sugDiccTipo" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $event)" />
         </div>
       }
     </div>
@@ -161,8 +161,8 @@
       </div>
       @for (fila of validaciones(); track $index) {
         <div class="grid min-w-[680px] grid-cols-2 items-start gap-siaf-md px-siaf-md py-siaf-sm">
-          <text-area-control placeholder="Elemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" />
-          <text-area-control placeholder="Descripción" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
+          <siaf-text-autocomplete [multiline]="true" placeholder="Elemento" [suggestions]="sugValidElemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" />
+          <siaf-text-autocomplete [multiline]="true" placeholder="Descripción" [suggestions]="sugValidDescripcion" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
         </div>
       }
     </div>
