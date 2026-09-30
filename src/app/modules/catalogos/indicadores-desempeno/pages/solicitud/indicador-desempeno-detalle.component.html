@@ -56,6 +56,29 @@
 
   <siaf-radio-group label="Nivel de medición" name="nivel-medicion" [inline]="true" [required]="true" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
 
+  <!-- Producto: solo cuando el nivel de medición es «2. Producto» -->
+  @if (nivelMedicion() === '2. Producto') {
+    <div class="flex flex-col gap-siaf-xs">
+      <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+        <h4 class="m-0 text-sm font-bold text-text">Producto <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
+        <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar producto" siafTooltip="Buscar" [disabled]="!!producto()" (click)="abrirModalProducto()" />
+      </div>
+      @if (producto(); as pr) {
+        <div class="flex items-start gap-siaf-md rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+          <div class="grid min-w-0 flex-1 gap-siaf-xs md:grid-cols-[200px_1fr]">
+            <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código producto</span><span class="text-sm font-bold text-text">{{ pr.codigo }}</span></div>
+            <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre producto</span><span class="text-sm font-bold text-text">{{ pr.nombre }}</span></div>
+          </div>
+          <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar producto" (click)="limpiarProducto()" />
+        </div>
+      } @else {
+        <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+          <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.</p>
+        </div>
+      }
+    </div>
+  }
+
   <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
     <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [options]="opcDimension" [value]="dimension()" (valueChange)="dimension.set($any($event))" />
     <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [options]="opcUnidad" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
@@ -213,6 +236,17 @@
   [selectedId]="programa()?.id ?? null"
   (accepted)="onProgramaAceptado($event)"
   (closed)="modalPrograma.set(false)"
+/>
+
+<!-- Modal de selección de producto -->
+<siaf-catalog-selection-modal
+  [open]="modalProducto()"
+  title="Seleccionar producto"
+  [columns]="columnasProducto"
+  [rows]="filasProducto"
+  [selectedId]="producto()?.id ?? null"
+  (accepted)="onProductoAceptado($event)"
+  (closed)="modalProducto.set(false)"
 />
 
 <!-- Subidas de archivo -->

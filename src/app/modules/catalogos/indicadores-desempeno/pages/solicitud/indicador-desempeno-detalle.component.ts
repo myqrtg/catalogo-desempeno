@@ -51,6 +51,17 @@ const OPCIONES_PROGRAMA: ProgramaPresupuestal[] = [
   { id: '0068', codigo: '0068', nombre: 'Reducción de vulnerabilidad y atención de emergencias por desastres', respCodigo: '006', respNombre: 'PRESIDENCIA DEL CONSEJO DE MINISTROS' },
 ];
 
+interface ProductoPresupuestal { id: string; codigo: string; nombre: string; }
+
+const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
+  { id: '3033248', codigo: '3033248', nombre: 'Comunidad accede a servicios de salud materno neonatal' },
+  { id: '3043955', codigo: '3043955', nombre: 'Atención prenatal reenfocada' },
+  { id: '3033172', codigo: '3033172', nombre: 'Municipios saludables promueven salud materno neonatal' },
+  { id: '3000001', codigo: '3000001', nombre: 'Acciones comunes' },
+  { id: '3033249', codigo: '3033249', nombre: 'Población informada en salud sexual y reproductiva' },
+  { id: '3043956', codigo: '3043956', nombre: 'Atención del parto normal' },
+];
+
 interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
 interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
 interface FilaValidacion { elemento: string; descripcion: string; }
@@ -93,6 +104,15 @@ export class IndicadorDesempenoDetalleComponent {
   readonly columnasPrograma: CatalogColumn[] = [
     { key: 'codigo', label: 'Código programa', widthClass: 'w-[200px]' },
     { key: 'nombre', label: 'Nombre programa' },
+  ];
+
+  // Producto (aparece solo cuando el nivel de medición es «2. Producto»).
+  readonly producto = signal<ProductoPresupuestal | null>(null);
+  readonly modalProducto = signal(false);
+  readonly filasProducto: CatalogRow[] = OPCIONES_PRODUCTO.map((p) => ({ id: p.id, codigo: p.codigo, nombre: p.nombre }));
+  readonly columnasProducto: CatalogColumn[] = [
+    { key: 'codigo', label: 'Código producto', widthClass: 'w-[200px]' },
+    { key: 'nombre', label: 'Nombre producto' },
   ];
 
   // ── Datos del indicador ───────────────────────────────────────────
@@ -188,6 +208,20 @@ export class IndicadorDesempenoDetalleComponent {
   /** Limpiar el programa también limpia la entidad responsable (derivada). */
   limpiarPrograma(): void {
     this.programa.set(null);
+  }
+
+  // ── Selección de producto (modal) ─────────────────────────────────
+  abrirModalProducto(): void {
+    this.modalProducto.set(true);
+  }
+
+  onProductoAceptado(id: string): void {
+    this.producto.set(OPCIONES_PRODUCTO.find((o) => o.id === id) ?? null);
+    this.modalProducto.set(false);
+  }
+
+  limpiarProducto(): void {
+    this.producto.set(null);
   }
 
   // ── Tablas dinámicas ──────────────────────────────────────────────
