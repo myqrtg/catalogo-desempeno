@@ -9,6 +9,18 @@ import { UploadSideNavComponent } from '../../../../../shared/ui/upload-side-nav
 import { UploadedFileCardComponent, UploadedFileInfo } from '../../../../../shared/ui/uploaded-file-card/uploaded-file-card.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { CatalogColumn, CatalogRow, CatalogSelectionModalComponent } from './catalog-selection-modal.component';
+import { TextAutocompleteComponent } from './text-autocomplete.component';
+
+/** Sugerencias de autocompletado para el nombre del indicador (datos de ejemplo del taller). */
+const NOMBRES_INDICADOR: string[] = [
+  'Cobertura de parto institucional',
+  'Cobertura de parto institucional en gestantes procedentes de zonas rurales',
+  'Proporción de menores de 5 años con desnutrición crónica',
+  'Proporción de recién nacidos con bajo peso al nacer',
+  'Tasa de mortalidad neonatal',
+  'Porcentaje de niñas y niños con vacunas completas para su edad',
+  'Cobertura de control prenatal con enfoque de riesgo',
+];
 
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
@@ -62,6 +74,7 @@ interface FilaValidacion { elemento: string; descripcion: string; }
     UploadSideNavComponent,
     UploadedFileCardComponent,
     CatalogSelectionModalComponent,
+    TextAutocompleteComponent,
     TooltipDirective,
   ],
   templateUrl: './indicador-desempeno-detalle.component.html',
@@ -150,6 +163,7 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcNivelResponsable = ['Nacional', 'Regional', 'Local'].map((v) => ({ value: v, label: v }));
   readonly opcAmbito = ['Nacional', 'Departamental', 'Provincial', 'Distrital'].map((v) => ({ value: v, label: v }));
   readonly opcArea = ['Costa', 'Sierra', 'Selva'].map((v) => ({ value: v, label: v }));
+  readonly nombresIndicador = NOMBRES_INDICADOR;
 
   // ── Aceptar ───────────────────────────────────────────────────────
   aceptarHabilitado(): boolean {
