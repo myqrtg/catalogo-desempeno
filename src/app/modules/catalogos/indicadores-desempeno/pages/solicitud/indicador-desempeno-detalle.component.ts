@@ -100,7 +100,8 @@ export class IndicadorDesempenoDetalleComponent {
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
 
   // ── Selección de programa y entidad ───────────────────────────────
-  readonly programa = signal<ProgramaPresupuestal | null>(null);
+  // Prellenado con datos de ejemplo (0002 Salud Materno Neonatal).
+  readonly programa = signal<ProgramaPresupuestal | null>(OPCIONES_PROGRAMA[0]);
   readonly modalPrograma = signal(false);
 
   // Filas y columnas del modal de selección.
@@ -110,8 +111,8 @@ export class IndicadorDesempenoDetalleComponent {
     { key: 'nombre', label: 'Nombre programa' },
   ];
 
-  // Producto (aparece solo cuando el nivel de medición es «2. Producto»).
-  readonly producto = signal<ProductoPresupuestal | null>(null);
+  // Producto (aparece solo cuando el nivel de medición es «2. Producto»); prellenado de ejemplo.
+  readonly producto = signal<ProductoPresupuestal | null>(OPCIONES_PRODUCTO[0]);
   readonly modalProducto = signal(false);
   readonly filasProducto: CatalogRow[] = OPCIONES_PRODUCTO.map((p) => ({ id: p.id, codigo: p.codigo, nombre: p.nombre }));
   readonly columnasProducto: CatalogColumn[] = [
@@ -119,30 +120,43 @@ export class IndicadorDesempenoDetalleComponent {
     { key: 'nombre', label: 'Nombre producto' },
   ];
 
-  // ── Datos del indicador ───────────────────────────────────────────
+  // ── Datos del indicador (prellenado con data cualitativa de ejemplo) ──
   readonly codigo = signal('');
-  readonly nombre = signal('');
-  readonly nivelMedicion = signal('');
-  readonly dimension = signal('');
-  readonly unidadMedida = signal('');
-  readonly sentido = signal('');
-  readonly tipoCalculo = signal('');
-  readonly numerador = signal('');
-  readonly denominador = signal('');
-  readonly tipoFuente = signal('');
-  readonly fuenteDatos = signal('');
-  readonly limitacion = signal('');
-  readonly supuestos = signal('');
-  readonly precisiones = signal('');
-  readonly periodicidad = signal('');
+  readonly nombre = signal('Cobertura de parto institucional');
+  readonly nivelMedicion = signal('2. Producto');
+  readonly dimension = signal('eficacia');
+  readonly unidadMedida = signal('Porcentaje');
+  readonly sentido = signal('Subir');
+  readonly tipoCalculo = signal('numerador');
+  readonly numerador = signal('total de mujeres que tuvieron nacimiento vivo atendido por personal de salud calificado en establecimientos de salud en los últimos cinco años.');
+  readonly denominador = signal('total de mujeres que tuvieron nacimiento vivo en los últimos cinco años.');
+  readonly tipoFuente = signal('INEI');
+  readonly fuenteDatos = signal('ENCUESTA DEMOGRAFICA Y DE SALUD FAMILIAR (ENDES)');
+  readonly limitacion = signal('La principal limitación del indicador es que la información recogida se basa en la declaración de las informantes, por lo cual, puede no ser una medición muy precisa, por problemas de recordación o conocimiento.');
+  readonly supuestos = signal('-');
+  readonly precisiones = signal(
+    'Parto Institucional:\n' +
+    'La variable Parto Institucional se construye a partir de las preguntas del Cuestionario Individual, Sección 4ª (Embarazo, parto, puerperio y lactancia):\n' +
+    '• Pregunta 426: ¿Quién la atendió en el parto de (NOMBRE)?; respondieron las alternativas: A (Médico), B (Obstetríz) o C (Enfermera).',
+  );
+  readonly periodicidad = signal('Semestral');
 
   // ── Cobertura de medición ─────────────────────────────────────────
-  readonly alcanceGeografico = signal('');
-  readonly nivelResponsable = signal('');
+  readonly alcanceGeografico = signal('Nacional y regional');
+  readonly nivelResponsable = signal('Nacional');
 
-  // ── Tablas dinámicas ──────────────────────────────────────────────
-  readonly desagregaciones = signal<FilaDesagregacion[]>([{ ambito: '', area: '', periodicidad: '' }]);
-  readonly variables = signal<FilaVariable[]>([{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
+  // ── Tablas dinámicas (prellenadas de ejemplo) ─────────────────────
+  readonly desagregaciones = signal<FilaDesagregacion[]>([
+    { ambito: '7 CALLAO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
+    { ambito: '9 HUANCAVELICA', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
+    { ambito: '8 CUSCO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
+    { ambito: '10 HUANUCO', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
+    { ambito: '6 CAJAMARCA', area: '1 TOTAL', periodicidad: '2 SEMESTRAL' },
+  ]);
+  readonly variables = signal<FilaVariable[]>([
+    { variable: 'PART_INST', descripcion: 'Identifica si el último parto ocurrió en un establecimiento de salud', fuente: 'Encuesta', tipoVariable: 'Categórica dicotómica' },
+    { variable: 'Part_estab', descripcion: 'Variable auxiliar que identifica si el establecimiento de salud es público o privado', fuente: 'Encuesta (M15)', tipoVariable: 'Categórica dicotómica' },
+  ]);
   readonly validaciones = signal<FilaValidacion[]>([{ elemento: '', descripcion: '' }]);
 
   // ── Archivos ──────────────────────────────────────────────────────
@@ -198,11 +212,18 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcUnidad = computed(() =>
     (this.unidadesPorDimension[this.dimension()] ?? []).map((v) => ({ value: v, label: v })),
   );
-  readonly opcTipoFuente = ['Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
+  readonly opcTipoFuente = ['INEI', 'Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral', 'Mensual'].map((v) => ({ value: v, label: v }));
   readonly opcNivelResponsable = ['Nacional', 'Regional', 'Local'].map((v) => ({ value: v, label: v }));
-  readonly opcAmbito = ['Nacional', 'Departamental', 'Provincial', 'Distrital'].map((v) => ({ value: v, label: v }));
-  readonly opcArea = ['Costa', 'Sierra', 'Selva'].map((v) => ({ value: v, label: v }));
+  // Catálogos de la desagregación geográfica (departamentos, área y periodicidad numeradas).
+  readonly opcAmbito = [
+    '1 AMAZONAS', '2 ANCASH', '3 APURIMAC', '4 AREQUIPA', '5 AYACUCHO', '6 CAJAMARCA', '7 CALLAO',
+    '8 CUSCO', '9 HUANCAVELICA', '10 HUANUCO', '11 ICA', '12 JUNIN', '13 LA LIBERTAD', '14 LAMBAYEQUE',
+    '15 LIMA', '16 LORETO', '17 MADRE DE DIOS', '18 MOQUEGUA', '19 PASCO', '20 PIURA', '21 PUNO',
+    '22 SAN MARTIN', '23 TACNA', '24 TUMBES', '25 UCAYALI',
+  ].map((v) => ({ value: v, label: v }));
+  readonly opcArea = ['1 TOTAL', '2 URBANO', '3 RURAL'].map((v) => ({ value: v, label: v }));
+  readonly opcPeriodicidadTabla = ['1 ANUAL', '2 SEMESTRAL', '3 TRIMESTRAL', '4 MENSUAL'].map((v) => ({ value: v, label: v }));
   readonly nombresIndicador = NOMBRES_INDICADOR;
 
   // ── Aceptar ───────────────────────────────────────────────────────

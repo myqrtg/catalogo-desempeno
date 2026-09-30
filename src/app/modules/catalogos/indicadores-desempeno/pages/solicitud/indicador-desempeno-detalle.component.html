@@ -126,7 +126,7 @@
         <div class="grid min-w-[720px] grid-cols-3 items-start gap-siaf-md px-siaf-md py-siaf-sm">
           <siaf-input type="select" placeholder="Ámbito geográfico" [required]="true" [options]="opcAmbito" [value]="fila.ambito" (valueChange)="actualizarDesagregacion($index, 'ambito', $any($event))" />
           <siaf-input type="select" placeholder="Área geográfica" [options]="opcArea" [value]="fila.area" (valueChange)="actualizarDesagregacion($index, 'area', $any($event))" />
-          <siaf-input type="select" placeholder="Periodicidad" [options]="opcPeriodicidad" [value]="fila.periodicidad" (valueChange)="actualizarDesagregacion($index, 'periodicidad', $any($event))" />
+          <siaf-input type="select" placeholder="Periodicidad" [options]="opcPeriodicidadTabla" [value]="fila.periodicidad" (valueChange)="actualizarDesagregacion($index, 'periodicidad', $any($event))" />
         </div>
       }
     </div>
