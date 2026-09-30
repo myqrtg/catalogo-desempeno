@@ -19,7 +19,7 @@ import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-con
           [placeholder]="label || placeholder"
           [required]="required"
           [maxlength]="maxlength"
-          [value]="value"
+          [value]="valor()"
           (valueChange)="onInput($event)"
         />
       } @else {
@@ -27,7 +27,7 @@ import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-con
           [label]="label"
           [placeholder]="placeholder"
           [required]="required"
-          [value]="value"
+          [value]="valor()"
           autocomplete="off"
           (valueChange)="onInput($any($event))"
         />
@@ -62,7 +62,8 @@ export class TextAutocompleteComponent {
   @Input() label = '';
   @Input() placeholder = '';
   @Input() required = false;
-  @Input() value = '';
+  /** El valor vive en una señal para que las coincidencias se recalculen en cada tecla. */
+  @Input() set value(v: string) { this.valor.set(v ?? ''); }
   @Input() set suggestions(value: string[]) { this._suggestions.set(value ?? []); }
   /** Máximo de sugerencias visibles. */
   @Input() max = 8;
@@ -74,11 +75,12 @@ export class TextAutocompleteComponent {
   /** Se emite solo cuando el usuario elige una sugerencia (no al escribir texto libre). */
   @Output() selected = new EventEmitter<string>();
 
+  readonly valor = signal('');
   private readonly _suggestions = signal<string[]>([]);
   readonly abierto = signal(false);
 
   readonly coincidencias = computed(() => {
-    const q = this.normalizar(this.value);
+    const q = this.normalizar(this.valor());
     if (!q) return [];
     return this._suggestions()
       .filter((s) => this.normalizar(s).includes(q) && this.normalizar(s) !== q)
@@ -86,13 +88,13 @@ export class TextAutocompleteComponent {
   });
 
   onInput(valor: string): void {
-    this.value = valor;
+    this.valor.set(valor);
     this.abierto.set(true);
     this.valueChange.emit(valor);
   }
 
   elegir(sugerencia: string): void {
-    this.value = sugerencia;
+    this.valor.set(sugerencia);
     this.abierto.set(false);
     this.valueChange.emit(sugerencia);
     this.selected.emit(sugerencia);
