@@ -54,12 +54,16 @@ const OPCIONES_PROGRAMA: ProgramaPresupuestal[] = [
 interface ProductoPresupuestal { id: string; codigo: string; nombre: string; }
 
 const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
-  { id: '3033248', codigo: '3033248', nombre: 'Comunidad accede a servicios de salud materno neonatal' },
-  { id: '3043955', codigo: '3043955', nombre: 'Atención prenatal reenfocada' },
-  { id: '3033172', codigo: '3033172', nombre: 'Municipios saludables promueven salud materno neonatal' },
-  { id: '3000001', codigo: '3000001', nombre: 'Acciones comunes' },
-  { id: '3033249', codigo: '3033249', nombre: 'Población informada en salud sexual y reproductiva' },
-  { id: '3043956', codigo: '3043956', nombre: 'Atención del parto normal' },
+  { id: '3033255', codigo: '3033255', nombre: 'Atención del parto normal' },
+  { id: '3033256', codigo: '3033256', nombre: 'Niños y niñas con atención de la anemia por deficiencia de hierro' },
+  { id: '3033257', codigo: '3033257', nombre: 'Niños y niñas con CRED completo según edad' },
+  { id: '3033258', codigo: '3033258', nombre: 'Población informada sobre salud sexual, salud reproductiva y métodos de planificación familiar' },
+  { id: '3033259', codigo: '3033259', nombre: 'Adolescentes acceden a servicios de salud para prevención del embarazo' },
+  { id: '3033260', codigo: '3033260', nombre: 'Adolescentes con atención preventiva de anemia y otras deficiencias nutricionales' },
+  { id: '3033261', codigo: '3033261', nombre: 'Atención prenatal reenfocada' },
+  { id: '3033262', codigo: '3033262', nombre: 'Población accede a métodos de planificación familiar' },
+  { id: '3033263', codigo: '3033263', nombre: 'Gestante con suplemento de hierro y ácido fólico' },
+  { id: '3033264', codigo: '3033264', nombre: 'Municipios saludables promueven el cuidado infantil' },
 ];
 
 interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
