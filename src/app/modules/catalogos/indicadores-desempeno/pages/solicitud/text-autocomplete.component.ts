@@ -1,25 +1,37 @@
 import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, HostListener, Input, Output, computed, inject, signal } from '@angular/core';
 
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
+import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-control/text-area-control.component';
 
 /**
  * Campo de texto con autocompletado: el usuario escribe libremente y, mientras escribe, se muestra una lista de
  * sugerencias que coinciden; al elegir una, se completa el campo. Permite texto que no esté en la lista.
+ * Con `[multiline]` usa un área de texto (para numerador, denominador, fuente de datos…).
  */
 @Component({
   selector: 'siaf-text-autocomplete',
   standalone: true,
-  imports: [TextFieldComponent],
+  imports: [TextFieldComponent, TextAreaControlComponent],
   template: `
     <div class="relative">
-      <siaf-input
-        [label]="label"
-        [placeholder]="placeholder"
-        [required]="required"
-        [value]="value"
-        autocomplete="off"
-        (valueChange)="onInput($any($event))"
-      />
+      @if (multiline) {
+        <text-area-control
+          [placeholder]="label || placeholder"
+          [required]="required"
+          [maxlength]="maxlength"
+          [value]="value"
+          (valueChange)="onInput($event)"
+        />
+      } @else {
+        <siaf-input
+          [label]="label"
+          [placeholder]="placeholder"
+          [required]="required"
+          [value]="value"
+          autocomplete="off"
+          (valueChange)="onInput($any($event))"
+        />
+      }
 
       @if (abierto() && coincidencias().length) {
         <div
@@ -54,6 +66,9 @@ export class TextAutocompleteComponent {
   @Input() set suggestions(value: string[]) { this._suggestions.set(value ?? []); }
   /** Máximo de sugerencias visibles. */
   @Input() max = 8;
+  /** Usa un área de texto en vez de un input de una línea. */
+  @Input() multiline = false;
+  @Input() maxlength = 500;
 
   @Output() valueChange = new EventEmitter<string>();
   /** Se emite solo cuando el usuario elige una sugerencia (no al escribir texto libre). */

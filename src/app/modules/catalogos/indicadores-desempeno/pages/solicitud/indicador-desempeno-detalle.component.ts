@@ -22,26 +22,28 @@ const NOMBRES_INDICADOR: string[] = [
   'Cobertura de control prenatal con enfoque de riesgo',
 ];
 
-/** Bloque «Datos del indicador» que autocompleta el registro al elegir un indicador conocido. */
-interface DatosIndicador {
-  dimension: string;
-  unidadMedida: string;
-  sentido: string;
-  tipoCalculo: string;
-  numerador: string;
-  denominador: string;
-}
+/** Sugerencias de autocompletado (al escribir) para los campos de texto del registro. */
+const SUGERENCIAS_NUMERADOR: string[] = [
+  'total de mujeres que tuvieron nacimiento vivo atendido por personal de salud calificado en establecimientos de salud en los últimos cinco años.',
+  'total de niñas y niños menores de 5 años con desnutrición crónica.',
+  'total de recién nacidos con bajo peso al nacer.',
+  'total de gestantes con al menos seis controles prenatales.',
+];
 
-const DATOS_POR_INDICADOR: Record<string, DatosIndicador> = {
-  'Cobertura de parto institucional': {
-    dimension: 'eficacia',
-    unidadMedida: 'Porcentaje',
-    sentido: 'Subir',
-    tipoCalculo: 'numerador',
-    numerador: 'total de mujeres que tuvieron nacimiento vivo atendido por personal de salud calificado en establecimientos de salud en los últimos cinco años.',
-    denominador: 'total de mujeres que tuvieron nacimiento vivo en los últimos cinco años.',
-  },
-};
+const SUGERENCIAS_DENOMINADOR: string[] = [
+  'total de mujeres que tuvieron nacimiento vivo en los últimos cinco años.',
+  'total de niñas y niños menores de 5 años evaluados.',
+  'total de recién nacidos vivos en el periodo.',
+  'total de gestantes atendidas en el periodo.',
+];
+
+const SUGERENCIAS_FUENTE: string[] = [
+  'ENCUESTA DEMOGRAFICA Y DE SALUD FAMILIAR (ENDES)',
+  'Registro Nominal de Atenciones (HIS - MINSA)',
+  'Sistema de Información del Estado Nutricional (SIEN)',
+  'Certificado de Nacido Vivo en Línea (CNV)',
+  'Censos Nacionales (INEI)',
+];
 
 /** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
@@ -232,6 +234,9 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcArea = ['1 TOTAL', '2 URBANO', '3 RURAL'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidadTabla = ['1 ANUAL', '2 SEMESTRAL', '3 TRIMESTRAL', '4 MENSUAL'].map((v) => ({ value: v, label: v }));
   readonly nombresIndicador = NOMBRES_INDICADOR;
+  readonly sugerenciasNumerador = SUGERENCIAS_NUMERADOR;
+  readonly sugerenciasDenominador = SUGERENCIAS_DENOMINADOR;
+  readonly sugerenciasFuente = SUGERENCIAS_FUENTE;
 
   // ── Aceptar ───────────────────────────────────────────────────────
   aceptarHabilitado(): boolean {
@@ -278,21 +283,6 @@ export class IndicadorDesempenoDetalleComponent {
     this.unidadMedida.set('');
   }
 
-  /**
-   * Al elegir un indicador conocido en el autocomplete del Nombre, se autocompletan los «Datos del indicador»
-   * de ese registro (dimensión, unidad, sentido y método de cálculo). El texto libre no autocompleta nada.
-   */
-  onNombreSeleccionado(nombre: string): void {
-    this.nombre.set(nombre);
-    const datos = DATOS_POR_INDICADOR[nombre];
-    if (!datos) return;
-    this.dimension.set(datos.dimension);
-    this.unidadMedida.set(datos.unidadMedida);
-    this.sentido.set(datos.sentido);
-    this.tipoCalculo.set(datos.tipoCalculo);
-    this.numerador.set(datos.numerador);
-    this.denominador.set(datos.denominador);
-  }
 
   // ── Tablas dinámicas ──────────────────────────────────────────────
   agregarDesagregacion(): void {

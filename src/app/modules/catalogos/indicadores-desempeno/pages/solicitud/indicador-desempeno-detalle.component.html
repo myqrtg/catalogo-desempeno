@@ -50,7 +50,7 @@
     <h4 class="m-0 text-sm font-bold text-text">Indicador de desempeño</h4>
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-[220px_1fr]">
       <siaf-input label="Código" [required]="true" [value]="codigo()" (valueChange)="codigo.set($any($event))" />
-      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador" [value]="nombre()" (valueChange)="nombre.set($event)" (selected)="onNombreSeleccionado($event)" />
+      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador" [value]="nombre()" (valueChange)="nombre.set($event)" />
     </div>
   </div>
 
@@ -90,15 +90,15 @@
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Método de cálculo</h4>
     <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
-    <text-area-control placeholder="Numerador" [required]="true" [maxlength]="4000" [value]="numerador()" (valueChange)="numerador.set($event)" />
-    <text-area-control placeholder="Denominador" [maxlength]="4000" [value]="denominador()" (valueChange)="denominador.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador" [value]="numerador()" (valueChange)="numerador.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador" [value]="denominador()" (valueChange)="denominador.set($event)" />
   </div>
 
   <!-- Fuentes de información -->
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Fuentes de información</h4>
     <siaf-input class="md:max-w-[520px]" label="Tipo de fuente de datos" type="select" placeholder="Seleccione" [required]="true" [options]="opcTipoFuente" [value]="tipoFuente()" (valueChange)="tipoFuente.set($any($event))" />
-    <text-area-control placeholder="Fuente de datos" [required]="true" [maxlength]="1000" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Fuente de datos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasFuente" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
   </div>
 
   <!-- Consideraciones técnicas -->
