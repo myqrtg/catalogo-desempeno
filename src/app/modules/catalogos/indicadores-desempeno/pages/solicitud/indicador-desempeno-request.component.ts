@@ -6,6 +6,7 @@ import { SolicitudeInfoCardComponent, SolicitudeInfoField } from '../../../../..
 import { SolicitudePageLayoutComponent } from '../../../../../shared/components/solicitude-page-layout/solicitude-page-layout.component';
 import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
+import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
 import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './indicador-desempeno-detalle.component';
@@ -29,6 +30,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     SolicitudeInfoCardComponent,
     SolicitudeFormCardComponent,
     ButtonComponent,
+    SnackbarComponent,
     TooltipDirective,
     IndicadorDesempenoDetalleComponent,
   ],
@@ -128,6 +130,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           }
         </siaf-solicitude-form-card>
       </siaf-solicitude-page-layout>
+
+      <!-- Aviso de registro exitoso (aparece con un breve retraso tras aceptar). -->
+      <div class="fixed bottom-6 right-6 z-[60]">
+        <siaf-snackbar [open]="snackbarVisible()" variant="record-done" (closed)="snackbarVisible.set(false)" />
+      </div>
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -141,6 +148,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly mostrandoForm = signal(false);
   readonly registros = signal<IndicadorRegistrado[]>([]);
   readonly seleccionados = signal<Set<number>>(new Set());
+  readonly snackbarVisible = signal(false);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Migas como el diseño: Inicio › Catálogo de indicadores de desempeño › Registro.
@@ -178,6 +186,9 @@ export class IndicadorDesempenoRequestComponent {
     const codigo = resumen.codigo || String(this.correlativo).padStart(4, '0');
     this.registros.update((r) => [...r, { ...resumen, codigo, id }]);
     this.mostrandoForm.set(false);
+    // El aviso aparece con un breve retraso una vez que ya se ve la tabla, y se oculta solo.
+    setTimeout(() => this.snackbarVisible.set(true), 800);
+    setTimeout(() => this.snackbarVisible.set(false), 800 + 5000);
   }
 
   alternarUno(id: number, marcado: boolean): void {
