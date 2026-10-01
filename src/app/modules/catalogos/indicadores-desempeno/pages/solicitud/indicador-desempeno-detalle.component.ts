@@ -109,13 +109,22 @@ const SUG_VALID_DESCRIPCION: string[] = [
   'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.',
 ];
 
-/** Resumen que se agrega a la lista de registros de la solicitud al aceptar. */
+/** Resumen que se agrega a la tabla de registros de la solicitud al aceptar. */
 export interface IndicadorDetalleResumen {
   codigo: string;
   nombre: string;
-  programa: string;
   nivelMedicion: string;
   dimension: string;
+  programa: string;
+  producto: string;
+  programacion: string;
+  gestion: string;
+  evaluacion: string;
+  anioInicio: string;
+  anioFin: string;
+  estado: string;
+  fechaDesde: string;
+  fechaHasta: string;
 }
 
 interface ProgramaPresupuestal {
@@ -246,7 +255,7 @@ export class IndicadorDesempenoDetalleComponent {
   // ── Medición y Vigencia (prellenadas de ejemplo; se asignan al aceptar) ──
   readonly anioInicioMedicion = signal('2027');
   readonly anioFinMedicion = signal('----');
-  readonly estadoVigencia = signal('');
+  readonly estadoVigencia = signal('SI');
   readonly fechaDesde = signal('23/01/2026');
   readonly fechaHasta = signal('--/--/----');
 
@@ -344,12 +353,24 @@ export class IndicadorDesempenoDetalleComponent {
   aceptar(): void {
     if (!this.aceptarHabilitado()) return;
     const dimension = this.opcDimension.find((o) => o.value === this.dimension())?.label ?? this.dimension();
+    const siNo = (v: string) => (v === 'SI' ? 'Sí' : v === 'NO' ? 'No' : v);
+    const p = this.programa();
+    const pr = this.producto();
     this.saved.emit({
       codigo: this.codigo().trim(),
       nombre: this.nombre().trim(),
-      programa: this.programa()?.nombre ?? '',
       nivelMedicion: this.nivelMedicion(),
       dimension,
+      programa: p ? `${p.codigo}. ${p.nombre}` : '',
+      producto: pr ? `${pr.codigo}. ${pr.nombre}` : '',
+      programacion: siNo(this.programacion()),
+      gestion: siNo(this.gestion()),
+      evaluacion: siNo(this.evaluacion()),
+      anioInicio: this.anioInicioMedicion(),
+      anioFin: this.anioFinMedicion(),
+      estado: siNo(this.estadoVigencia()),
+      fechaDesde: this.fechaDesde(),
+      fechaHasta: this.fechaHasta(),
     });
   }
 
