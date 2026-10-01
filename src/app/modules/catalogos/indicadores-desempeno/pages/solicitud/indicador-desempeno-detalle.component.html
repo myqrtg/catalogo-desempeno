@@ -142,7 +142,7 @@
       </div>
       @for (fila of variables(); track $index) {
         <div class="grid grid-cols-1 md:grid-cols-4 items-start gap-siaf-md px-siaf-md py-siaf-sm border-t border-[var(--sys-color-divider-default)]">
-          <siaf-text-autocomplete placeholder="Variable" [suggestions]="sugDiccVariable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $event)" />
+          <siaf-text-autocomplete placeholder="Variable" [suggestions]="sugDiccVariable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $event)" (selected)="onVariableSeleccionada($index, $event)" />
           <siaf-text-autocomplete placeholder="Descripción" [suggestions]="sugDiccDescripcion" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $event)" />
           <siaf-text-autocomplete placeholder="Fuente" [suggestions]="sugDiccFuente" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $event)" />
           <siaf-text-autocomplete placeholder="Tipo de variable" [suggestions]="sugDiccTipo" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $event)" />
@@ -161,7 +161,7 @@
       </div>
       @for (fila of validaciones(); track $index) {
         <div class="grid grid-cols-1 md:grid-cols-2 items-start gap-siaf-md px-siaf-md py-siaf-sm border-t border-[var(--sys-color-divider-default)]">
-          <siaf-text-autocomplete [multiline]="true" placeholder="Elemento" [suggestions]="sugValidElemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" />
+          <siaf-text-autocomplete [multiline]="true" placeholder="Elemento" [suggestions]="sugValidElemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" (selected)="onElementoSeleccionado($index, $event)" />
           <siaf-text-autocomplete [multiline]="true" placeholder="Descripción" [suggestions]="sugValidDescripcion" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
         </div>
       }

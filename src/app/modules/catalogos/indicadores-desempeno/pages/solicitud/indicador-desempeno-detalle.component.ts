@@ -79,8 +79,29 @@ const SUG_DICC_DESCRIPCION: string[] = [
 const SUG_DICC_FUENTE: string[] = ['Encuesta', 'Encuesta (M15)', 'Base de datos de encuesta'];
 const SUG_DICC_TIPO: string[] = ['Categórica dicotómica', 'Categórica', 'Numérica', 'Continua'];
 
+// Al elegir una Variable del diccionario, se autocompletan sus otras columnas.
+interface DiccionarioDato { descripcion: string; fuente: string; tipoVariable: string; }
+const DICC_POR_VARIABLE: Record<string, DiccionarioDato> = {
+  PART_INST: { descripcion: 'Identifica si el último parto ocurrió en un establecimiento de salud', fuente: 'Encuesta', tipoVariable: 'Categórica dicotómica' },
+  Part_estab: { descripcion: 'Variable auxiliar que identifica si el establecimiento de salud es público o privado', fuente: 'Encuesta (M15)', tipoVariable: 'Categórica dicotómica' },
+  M15: { descripcion: 'Lugar donde ocurrió el parto.', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+  M3A: { descripcion: 'La atendió en el parto: Médico', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+  M3B: { descripcion: 'La atendió en el parto: Enfermera', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+  M3C: { descripcion: 'La atendió en el parto: Obstetra', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+  M3N: { descripcion: 'La atendió en el parto: Nadie', fuente: 'Base de datos de encuesta', tipoVariable: 'Categórica' },
+};
+
 // ── Sugerencias de las Validaciones ──
 const SUG_VALID_ELEMENTO: string[] = ['Lugar del parto', 'Parto institucional', 'Parto no institucional', 'Valores finales', 'Consistencia'];
+
+// Al elegir un Elemento de validación, se autocompleta su Descripción.
+const VALID_POR_ELEMENTO: Record<string, string> = {
+  'Lugar del parto': 'Se consideran institucionales los partos ocurridos en establecimientos de salud codificados entre 21-27, 31-32 y 41-42 en la variable M15.',
+  'Parto institucional': 'Se asigna valor 1 cuando el parto ocurrió en un establecimiento de salud y fue atendido por un profesional de salud registrado en M3A, M3B o M3C.',
+  'Parto no institucional': 'Se asigna valor 0 cuando el parto no ocurrió en un establecimiento de salud y no fue atendido por personal de salud (M3N=0).',
+  'Valores finales': 'PART_INST: 1 = Sí, 0 = No.',
+  'Consistencia': 'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.',
+};
 const SUG_VALID_DESCRIPCION: string[] = [
   'Se consideran institucionales los partos ocurridos en establecimientos de salud codificados entre 21-27, 31-32 y 41-42 en la variable M15.',
   'Se asigna valor 1 cuando el parto ocurrió en un establecimiento de salud y fue atendido por un profesional de salud registrado en M3A, M3B o M3C.',
@@ -350,12 +371,26 @@ export class IndicadorDesempenoDetalleComponent {
   actualizarVariable(i: number, campo: keyof FilaVariable, valor: string): void {
     this.variables.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
   }
+  /** Al elegir una Variable conocida, autocompleta Descripción, Fuente y Tipo de esa fila. */
+  onVariableSeleccionada(i: number, variable: string): void {
+    const d = DICC_POR_VARIABLE[variable];
+    this.variables.update((f) => f.map((fila, idx) => (idx === i
+      ? { ...fila, variable, ...(d ? { descripcion: d.descripcion, fuente: d.fuente, tipoVariable: d.tipoVariable } : {}) }
+      : fila)));
+  }
 
   agregarValidacion(): void {
     this.validaciones.update((f) => [...f, { elemento: '', descripcion: '' }]);
   }
   actualizarValidacion(i: number, campo: keyof FilaValidacion, valor: string): void {
     this.validaciones.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
+  }
+  /** Al elegir un Elemento conocido, autocompleta su Descripción. */
+  onElementoSeleccionado(i: number, elemento: string): void {
+    const desc = VALID_POR_ELEMENTO[elemento];
+    this.validaciones.update((f) => f.map((fila, idx) => (idx === i
+      ? { ...fila, elemento, ...(desc !== undefined ? { descripcion: desc } : {}) }
+      : fila)));
   }
 
   // ── Archivos ──────────────────────────────────────────────────────
