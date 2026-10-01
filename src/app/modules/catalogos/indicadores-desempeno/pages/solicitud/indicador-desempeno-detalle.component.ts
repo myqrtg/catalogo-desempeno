@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, signal } from '@angular/core';
 
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
-import { DateTimePickerComponent } from '../../../../../shared/ui/date-time-picker/date-time-picker.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { UploadSideNavComponent } from '../../../../../shared/ui/upload-side-nav/upload-side-nav.component';
@@ -172,7 +171,6 @@ interface FilaValidacion { elemento: string; descripcion: string; }
     ButtonComponent,
     RadioComponent,
     TextFieldComponent,
-    DateTimePickerComponent,
     UploadSideNavComponent,
     UploadedFileCardComponent,
     CatalogSelectionModalComponent,
@@ -243,8 +241,12 @@ export class IndicadorDesempenoDetalleComponent {
   readonly gestion = signal('');
   readonly evaluacion = signal('');
 
-  // ── Vigencia ──────────────────────────────────────────────────────
+  // ── Medición y Vigencia (prellenadas de ejemplo; se asignan al aceptar) ──
+  readonly anioInicioMedicion = signal('2027');
+  readonly anioFinMedicion = signal('----');
   readonly estadoVigencia = signal('');
+  readonly fechaDesde = signal('23/01/2026');
+  readonly fechaHasta = signal('--/--/----');
 
   // ── Opciones de selects y radios ──────────────────────────────────
   readonly opcNivelMedicion = [
