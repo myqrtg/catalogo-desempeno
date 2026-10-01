@@ -326,10 +326,11 @@ export class IndicadorDesempenoDetalleComponent {
 
   // ── Aceptar ───────────────────────────────────────────────────────
   /**
-   * Se habilita cuando están completos los campos obligatorios del registro. El Código y los campos de Medición/
-   * Vigencia se asignan al aceptar (no bloquean); el Denominador y Área/Periodicidad de la tabla son opcionales.
+   * Señal que se habilita cuando están completos los campos obligatorios del registro. Es `computed` (no método) para
+   * que el botón «Aceptar» del padre, en contenido proyectado, se actualice de forma fiable al cambiar cualquier campo.
+   * El Código y Medición/Vigencia se asignan al aceptar (no bloquean); Denominador y Área/Periodicidad son opcionales.
    */
-  aceptarHabilitado(): boolean {
+  readonly aceptarHabilitado = computed<boolean>(() => {
     const req = (v: string) => !!v && v.trim().length > 0;
     const productoOk = this.nivelMedicion() === '2. Producto' ? !!this.producto() : true;
     const desagregacionOk = this.desagregaciones().some((f) => req(f.ambito));
@@ -348,7 +349,7 @@ export class IndicadorDesempenoDetalleComponent {
       && !!this.codigoComentado() && !!this.sustento()
       && req(this.programacion()) && req(this.gestion()) && req(this.evaluacion())
     );
-  }
+  });
 
   aceptar(): void {
     if (!this.aceptarHabilitado()) return;
