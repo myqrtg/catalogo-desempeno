@@ -114,6 +114,8 @@ export interface IndicadorDetalleResumen {
   codigo: string;
   nombre: string;
   programa: string;
+  nivelMedicion: string;
+  dimension: string;
 }
 
 interface ProgramaPresupuestal {
@@ -341,7 +343,14 @@ export class IndicadorDesempenoDetalleComponent {
 
   aceptar(): void {
     if (!this.aceptarHabilitado()) return;
-    this.saved.emit({ codigo: this.codigo().trim(), nombre: this.nombre().trim(), programa: this.programa()?.nombre ?? '' });
+    const dimension = this.opcDimension.find((o) => o.value === this.dimension())?.label ?? this.dimension();
+    this.saved.emit({
+      codigo: this.codigo().trim(),
+      nombre: this.nombre().trim(),
+      programa: this.programa()?.nombre ?? '',
+      nivelMedicion: this.nivelMedicion(),
+      dimension,
+    });
   }
 
   // ── Selección de programa (modal) ─────────────────────────────────

@@ -10,11 +10,16 @@ import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.direc
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
 import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './indicador-desempeno-detalle.component';
 
+/** Registro de indicador ya agregado a la solicitud (fila de la tabla). */
+interface IndicadorRegistrado extends IndicadorDetalleResumen {
+  id: number;
+}
+
 /**
  * Solicitud de indicadores de desempeño (estado «Nuevo»): la pantalla que abre «Crear documento» al aceptar.
  *
- * La tarjeta «Registro de indicador de desempeño» alterna entre: estado vacío, lista de registros agregados, y el
- * formulario DETALLE (al pulsar «+»). El flujo Grabar/Verificar de la solicitud queda pendiente de su diseño.
+ * La tarjeta «Registro de indicador de desempeño» alterna entre: estado vacío, la tabla de registros agregados, y el
+ * formulario DETALLE (al pulsar «+»). Al aceptar un registro, este pasa a la tabla y se habilita «Grabar».
  */
 @Component({
   selector: 'siaf-indicador-desempeno-request',
@@ -37,7 +42,7 @@ import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './i
         secondaryText="Creación"
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
-        [saveDisabled]="true"
+        [saveDisabled]="mostrandoForm() || registros().length === 0"
         [verifyDisabled]="true"
         (returned)="regresar()"
         (canceled)="regresar()"
@@ -57,16 +62,32 @@ import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './i
           @if (mostrandoForm()) {
             <siaf-indicador-desempeno-detalle (saved)="onRegistroGuardado($event)" (canceled)="cancelarForm()" />
           } @else if (registros().length) {
-            <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
-              <div class="grid min-w-[560px] grid-cols-[140px_1fr] gap-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
-                <span>Código</span><span>Nombre</span>
-              </div>
-              @for (registro of registros(); track $index) {
-                <div class="grid min-w-[560px] grid-cols-[140px_1fr] gap-siaf-md border-t border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-sm">
-                  <span class="font-bold text-text">{{ registro.codigo }}</span>
-                  <span class="text-[var(--sys-color-text-neutral-medium)]">{{ registro.nombre }}</span>
+            <div class="flex flex-col gap-siaf-md">
+              <input type="checkbox" class="size-5 shrink-0" [checked]="todosSeleccionados()" (change)="alternarTodos($any($event.target).checked)" aria-label="Seleccionar todos los registros" />
+
+              <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+                <div class="grid min-w-[760px] grid-cols-[48px_160px_1fr_200px_220px] items-center bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+                  <span></span>
+                  <span>Código indicador</span>
+                  <span>Nombre indicador</span>
+                  <span class="text-center">Nivel de medición</span>
+                  <span class="text-center">Dimensión de desempeño</span>
                 </div>
-              }
+                @for (registro of registros(); track registro.id) {
+                  <div class="grid min-w-[760px] grid-cols-[48px_160px_1fr_200px_220px] items-center border-t border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-sm">
+                    <input type="checkbox" class="size-5 shrink-0" [checked]="seleccionados().has(registro.id)" (change)="alternarUno(registro.id, $any($event.target).checked)" [attr.aria-label]="'Seleccionar ' + registro.nombre" />
+                    <span class="font-bold text-text">{{ registro.codigo }}</span>
+                    <span class="text-text">{{ registro.nombre }}</span>
+                    <span class="text-center text-[var(--sys-color-text-neutral-medium)]">{{ registro.nivelMedicion }}</span>
+                    <span class="text-center text-[var(--sys-color-text-neutral-medium)]">{{ registro.dimension }}</span>
+                  </div>
+                }
+              </div>
+
+              <div class="flex items-center justify-end gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
+                <span>Filas por página: 25</span>
+                <span>1-{{ registros().length }} de {{ registros().length }}</span>
+              </div>
             </div>
           } @else {
             <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -88,7 +109,9 @@ export class IndicadorDesempenoRequestComponent {
   readonly detalle = viewChild(IndicadorDesempenoDetalleComponent);
 
   readonly mostrandoForm = signal(false);
-  readonly registros = signal<IndicadorDetalleResumen[]>([]);
+  readonly registros = signal<IndicadorRegistrado[]>([]);
+  readonly seleccionados = signal<Set<number>>(new Set());
+  private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Migas como el diseño: Inicio › Catálogo de indicadores de desempeño › Registro.
   readonly breadcrumbs: BreadcrumbItem[] = [
@@ -101,6 +124,11 @@ export class IndicadorDesempenoRequestComponent {
     { label: 'Fecha', value: '' },
     { label: 'Órgano rector', value: ORGANO_RECTOR },
   ];
+
+  todosSeleccionados(): boolean {
+    const total = this.registros().length;
+    return total > 0 && this.seleccionados().size === total;
+  }
 
   regresar(): void {
     void this.router.navigate(['/panel']);
@@ -115,7 +143,22 @@ export class IndicadorDesempenoRequestComponent {
   }
 
   onRegistroGuardado(resumen: IndicadorDetalleResumen): void {
-    this.registros.update((r) => [...r, resumen]);
+    this.correlativo += 1;
+    const id = this.correlativo;
+    const codigo = resumen.codigo || String(this.correlativo).padStart(4, '0');
+    this.registros.update((r) => [...r, { ...resumen, codigo, id }]);
     this.mostrandoForm.set(false);
+  }
+
+  alternarUno(id: number, marcado: boolean): void {
+    this.seleccionados.update((s) => {
+      const next = new Set(s);
+      if (marcado) next.add(id); else next.delete(id);
+      return next;
+    });
+  }
+
+  alternarTodos(marcado: boolean): void {
+    this.seleccionados.set(marcado ? new Set(this.registros().map((r) => r.id)) : new Set());
   }
 }
