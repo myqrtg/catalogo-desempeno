@@ -314,8 +314,29 @@ export class IndicadorDesempenoDetalleComponent {
   readonly sugValidDescripcion = SUG_VALID_DESCRIPCION;
 
   // ── Aceptar ───────────────────────────────────────────────────────
+  /**
+   * Se habilita cuando están completos los campos obligatorios del registro. El Código y los campos de Medición/
+   * Vigencia se asignan al aceptar (no bloquean); el Denominador y Área/Periodicidad de la tabla son opcionales.
+   */
   aceptarHabilitado(): boolean {
-    return !!this.codigo().trim() && !!this.nombre().trim();
+    const req = (v: string) => !!v && v.trim().length > 0;
+    const productoOk = this.nivelMedicion() === '2. Producto' ? !!this.producto() : true;
+    const desagregacionOk = this.desagregaciones().some((f) => req(f.ambito));
+    const diccionarioOk = this.variables().some((f) => req(f.variable) && req(f.descripcion) && req(f.fuente) && req(f.tipoVariable));
+    const validacionesOk = this.validaciones().some((f) => req(f.elemento) && req(f.descripcion));
+    return (
+      !!this.programa() && productoOk
+      && req(this.nombre())
+      && req(this.nivelMedicion()) && req(this.dimension()) && req(this.unidadMedida()) && req(this.sentido())
+      && req(this.tipoCalculo()) && req(this.numerador())
+      && req(this.tipoFuente()) && req(this.fuenteDatos())
+      && req(this.limitacion()) && req(this.supuestos()) && req(this.precisiones())
+      && req(this.periodicidad())
+      && req(this.alcanceGeografico()) && req(this.nivelResponsable())
+      && desagregacionOk && diccionarioOk && validacionesOk
+      && !!this.codigoComentado() && !!this.sustento()
+      && req(this.programacion()) && req(this.gestion()) && req(this.evaluacion())
+    );
   }
 
   aceptar(): void {
