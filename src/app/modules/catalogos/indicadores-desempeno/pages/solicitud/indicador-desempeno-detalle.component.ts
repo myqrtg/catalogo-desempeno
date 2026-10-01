@@ -275,7 +275,7 @@ export class IndicadorDesempenoDetalleComponent {
     '22 SAN MARTIN', '23 TACNA', '24 TUMBES', '25 UCAYALI',
   ].map((v) => ({ value: v, label: v }));
   readonly opcArea = ['1 TOTAL', '2 URBANO', '3 RURAL'].map((v) => ({ value: v, label: v }));
-  readonly opcPeriodicidadTabla = ['1 ANUAL', '2 SEMESTRAL', '3 TRIMESTRAL', '4 MENSUAL'].map((v) => ({ value: v, label: v }));
+  readonly opcPeriodicidadTabla = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
   readonly nombresIndicador = NOMBRES_INDICADOR;
   readonly sugerenciasNumerador = SUGERENCIAS_NUMERADOR;
   readonly sugerenciasDenominador = SUGERENCIAS_DENOMINADOR;
