@@ -418,12 +418,24 @@ export class IndicadorDesempenoDetalleComponent {
   actualizarDesagregacion(i: number, campo: keyof FilaDesagregacion, valor: string): void {
     this.desagregaciones.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
   }
+  eliminarDesagregacion(i: number): void {
+    this.desagregaciones.update((f) => {
+      const next = f.filter((_, idx) => idx !== i);
+      return next.length ? next : [{ ambito: '', area: '', periodicidad: '' }];
+    });
+  }
 
   agregarVariable(): void {
     this.variables.update((f) => [...f, { variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
   }
   actualizarVariable(i: number, campo: keyof FilaVariable, valor: string): void {
     this.variables.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
+  }
+  eliminarVariable(i: number): void {
+    this.variables.update((f) => {
+      const next = f.filter((_, idx) => idx !== i);
+      return next.length ? next : [{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }];
+    });
   }
   /** Al elegir una Variable conocida, autocompleta Descripción, Fuente y Tipo de esa fila. */
   onVariableSeleccionada(i: number, variable: string): void {
@@ -438,6 +450,12 @@ export class IndicadorDesempenoDetalleComponent {
   }
   actualizarValidacion(i: number, campo: keyof FilaValidacion, valor: string): void {
     this.validaciones.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
+  }
+  eliminarValidacion(i: number): void {
+    this.validaciones.update((f) => {
+      const next = f.filter((_, idx) => idx !== i);
+      return next.length ? next : [{ elemento: '', descripcion: '' }];
+    });
   }
   /** Al elegir un Elemento conocido, autocompleta su Descripción. */
   onElementoSeleccionado(i: number, elemento: string): void {
