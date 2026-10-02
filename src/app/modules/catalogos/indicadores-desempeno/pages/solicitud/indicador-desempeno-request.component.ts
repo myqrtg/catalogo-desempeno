@@ -57,7 +57,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               <siaf-button variant="secondary" size="md" (click)="cancelarForm()">Cancelar</siaf-button>
               <siaf-button variant="accent" size="md" [disabled]="!detalle()?.aceptarHabilitado()" (click)="detalle()?.aceptar()">Aceptar</siaf-button>
             } @else {
-              <siaf-button variant="accent" size="md" icon="add" [iconOnly]="true" ariaLabel="Añadir" siafTooltip="Añadir" (click)="abrirForm()" />
+              <siaf-button variant="accent" size="md" icon="add" [iconOnly]="true" [disabled]="registros().length > 0" ariaLabel="Añadir" siafTooltip="Añadir" (click)="abrirForm()" />
             }
           </div>
 
@@ -65,13 +65,19 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-indicador-desempeno-detalle (saved)="onRegistroGuardado($event)" (canceled)="cancelarForm()" />
           } @else if (registros().length) {
             <div class="flex flex-col gap-siaf-md">
+              <div class="flex items-center gap-siaf-sm">
+                <input type="checkbox" class="size-5" [checked]="todosSeleccionados()" (change)="alternarTodos($any($event.target).checked)" aria-label="Seleccionar todos los registros" />
+                @if (seleccionados().size > 0) {
+                  <siaf-button variant="text" size="md" icon="edit" [iconOnly]="true" ariaLabel="Editar" siafTooltip="Editar" (click)="editarSeleccionado()" />
+                  <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="eliminarSeleccionados()" />
+                  <siaf-button variant="text" size="md" icon="more_vert" [iconOnly]="true" ariaLabel="Más opciones" siafTooltip="Más opciones" />
+                }
+              </div>
               <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
                 <table class="w-full min-w-[2320px] border-collapse text-sm">
                   <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
                     <tr>
-                      <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm" rowspan="2">
-                        <input type="checkbox" class="size-5" [checked]="todosSeleccionados()" (change)="alternarTodos($any($event.target).checked)" aria-label="Seleccionar todos los registros" />
-                      </th>
+                      <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm" rowspan="2"></th>
                       <th class="w-[140px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Código indicador</th>
                       <th class="w-[240px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Nombre indicador</th>
                       <th class="w-[160px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Nivel de medición</th>
@@ -201,5 +207,17 @@ export class IndicadorDesempenoRequestComponent {
 
   alternarTodos(marcado: boolean): void {
     this.seleccionados.set(marcado ? new Set(this.registros().map((r) => r.id)) : new Set());
+  }
+
+  /** Vuelve a abrir el formulario de detalle para editar el registro seleccionado. */
+  editarSeleccionado(): void {
+    this.mostrandoForm.set(true);
+  }
+
+  /** Elimina los registros marcados y limpia la selección. */
+  eliminarSeleccionados(): void {
+    const ids = this.seleccionados();
+    this.registros.update((r) => r.filter((registro) => !ids.has(registro.id)));
+    this.seleccionados.set(new Set());
   }
 }
