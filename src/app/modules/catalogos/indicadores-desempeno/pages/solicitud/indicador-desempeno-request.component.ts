@@ -8,6 +8,7 @@ import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/brea
 import { ActionTrackerComponent, ActionTrackerSummary } from '../../../../../shared/ui/action-tracker/action-tracker.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
+import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status-tag.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
@@ -56,11 +57,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (canceled)="regresar()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
+        (verified)="modalVerificar.set(true)"
       >
-        @if (elaborado()) {
+        @if (grabado()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
             <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
-            <siaf-document-summary-card [documentNumber]="numeroDocumento" />
+            <siaf-document-summary-card [documentNumber]="numeroDocumento" [status]="estadoDocumento()" />
           </section>
         } @else {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
@@ -151,7 +153,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           }
         </siaf-solicitude-form-card>
 
-        @if (elaborado()) {
+        @if (grabado()) {
           <siaf-action-tracker [showSummaryCards]="true" [showTabs]="false" [summaryItems]="trazabilidad()" />
         }
       </siaf-solicitude-page-layout>
@@ -166,6 +168,18 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (confirmed)="confirmarGrabar()"
         (canceled)="modalGrabar.set(false)"
         (closed)="modalGrabar.set(false)"
+      />
+
+      <!-- Confirmación de verificar y enviar el documento. -->
+      <siaf-modal
+        [open]="modalVerificar()"
+        variant="verify"
+        title="¿Verificar y enviar solicitud?"
+        description="La solicitud será verificada y enviada."
+        [showIllustration]="true"
+        (confirmed)="confirmarVerificar()"
+        (canceled)="modalVerificar.set(false)"
+        (closed)="modalVerificar.set(false)"
       />
 
       <!-- Confirmación de borrado del registro seleccionado. -->
@@ -190,6 +204,17 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           variant="creation-elaborated"
           [requestNumber]="numeroDocumento"
           (closed)="snackbarElaboradoVisible.set(false)"
+        />
+      </div>
+
+      <!-- Aviso de documento verificado y enviado (aparece tras verificar). -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar
+          [open]="snackbarVerificadoVisible()"
+          variant="creation-verified"
+          requestAction="verificado y enviado"
+          [requestNumber]="numeroDocumento"
+          (closed)="snackbarVerificadoVisible.set(false)"
         />
       </div>
 
@@ -218,22 +243,27 @@ export class IndicadorDesempenoRequestComponent {
   readonly seleccionados = signal<Set<number>>(new Set());
   readonly modalEliminar = signal(false);
   readonly modalGrabar = signal(false);
+  readonly modalVerificar = signal(false);
   readonly snackbarVisible = signal(false);
   readonly snackbarEliminadoVisible = signal(false);
   readonly snackbarElaboradoVisible = signal(false);
+  readonly snackbarVerificadoVisible = signal(false);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
-  // Estado del documento: «new» (Nuevo) hasta grabar, luego «elaborated» (Elaborado).
-  readonly estado = signal<'new' | 'elaborated'>('new');
+  // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
+  readonly estado = signal<'new' | 'elaborated' | 'verified'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
+  readonly grabado = computed(() => this.estado() !== 'new');
+  readonly estadoDocumento = computed<FlowStatus>(() => (this.estado() === 'verified' ? 'Verificado' : 'Elaborado'));
   readonly numeroDocumento = '0001';
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
   private readonly fechaElaboracion = signal('');
+  private readonly fechaVerificacion = signal('');
 
-  // Trazabilidad: solo Elaborado queda registrado; el resto aún no.
+  // Trazabilidad: se van registrando los hitos a medida que avanza el documento.
   readonly trazabilidad = computed<ActionTrackerSummary[]>(() => [
     { label: 'Elaborado por', actionBy: this.elaboradorNombre, date: this.fechaElaboracion() },
-    { label: 'Verificado por', actionBy: '', date: '' },
+    { label: 'Verificado por', actionBy: this.fechaVerificacion() ? this.elaboradorNombre : '', date: this.fechaVerificacion() },
     { label: 'Validado por', actionBy: '', date: '' },
     { label: 'Aceptado por', actionBy: '', date: '' },
   ]);
@@ -307,6 +337,15 @@ export class IndicadorDesempenoRequestComponent {
   /** Vuelve a edición (estado «Nuevo») para modificar el documento elaborado. */
   editar(): void {
     this.estado.set('new');
+  }
+
+  /** Confirma «Verificar y enviar»: el documento pasa a «Verificado» y se avisa. */
+  confirmarVerificar(): void {
+    this.modalVerificar.set(false);
+    this.fechaVerificacion.set(new Date().toLocaleString('es-PE'));
+    this.estado.set('verified');
+    setTimeout(() => this.snackbarVerificadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarVerificadoVisible.set(false), 300 + 5000);
   }
 
   /** Confirma el borrado desde el modal: elimina los registros marcados, lo cierra y avisa. */
