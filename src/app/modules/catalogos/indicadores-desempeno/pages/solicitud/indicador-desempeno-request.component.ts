@@ -6,6 +6,7 @@ import { SolicitudeInfoCardComponent, SolicitudeInfoField } from '../../../../..
 import { SolicitudePageLayoutComponent } from '../../../../../shared/components/solicitude-page-layout/solicitude-page-layout.component';
 import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
+import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
@@ -30,6 +31,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     SolicitudeInfoCardComponent,
     SolicitudeFormCardComponent,
     ButtonComponent,
+    ModalComponent,
     SnackbarComponent,
     TooltipDirective,
     IndicadorDesempenoDetalleComponent,
@@ -69,7 +71,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                 <input type="checkbox" class="size-5" [checked]="todosSeleccionados()" (change)="alternarTodos($any($event.target).checked)" aria-label="Seleccionar todos los registros" />
                 @if (seleccionados().size > 0) {
                   <siaf-button variant="text" size="md" icon="edit" [iconOnly]="true" ariaLabel="Editar" siafTooltip="Editar" (click)="editarSeleccionado()" />
-                  <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="eliminarSeleccionados()" />
+                  <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="modalEliminar.set(true)" />
                   <siaf-button variant="text" size="md" icon="more_vert" [iconOnly]="true" ariaLabel="Más opciones" siafTooltip="Más opciones" />
                 }
               </div>
@@ -137,6 +139,16 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         </siaf-solicitude-form-card>
       </siaf-solicitude-page-layout>
 
+      <!-- Confirmación de borrado del registro seleccionado. -->
+      <siaf-modal
+        [open]="modalEliminar()"
+        variant="delete-record"
+        [showIllustration]="true"
+        (confirmed)="confirmarEliminar()"
+        (canceled)="modalEliminar.set(false)"
+        (closed)="modalEliminar.set(false)"
+      />
+
       <!-- Aviso de registro exitoso (aparece con un breve retraso tras aceptar). -->
       <div class="fixed bottom-6 right-6 z-[60]">
         <siaf-snackbar [open]="snackbarVisible()" variant="record-done" (closed)="snackbarVisible.set(false)" />
@@ -154,6 +166,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly mostrandoForm = signal(false);
   readonly registros = signal<IndicadorRegistrado[]>([]);
   readonly seleccionados = signal<Set<number>>(new Set());
+  readonly modalEliminar = signal(false);
   readonly snackbarVisible = signal(false);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
@@ -214,10 +227,11 @@ export class IndicadorDesempenoRequestComponent {
     this.mostrandoForm.set(true);
   }
 
-  /** Elimina los registros marcados y limpia la selección. */
-  eliminarSeleccionados(): void {
+  /** Confirma el borrado desde el modal: elimina los registros marcados y lo cierra. */
+  confirmarEliminar(): void {
     const ids = this.seleccionados();
     this.registros.update((r) => r.filter((registro) => !ids.has(registro.id)));
     this.seleccionados.set(new Set());
+    this.modalEliminar.set(false);
   }
 }
