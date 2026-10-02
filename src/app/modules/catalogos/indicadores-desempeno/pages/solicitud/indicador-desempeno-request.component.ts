@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { SolicitudeFormCardComponent } from '../../../../../shared/components/solicitude-form-card/solicitude-form-card.component';
 import { SolicitudeInfoCardComponent, SolicitudeInfoField } from '../../../../../shared/components/solicitude-info-card/solicitude-info-card.component';
 import { SolicitudePageLayoutComponent } from '../../../../../shared/components/solicitude-page-layout/solicitude-page-layout.component';
 import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
+import { ActionTrackerComponent, ActionTrackerSummary } from '../../../../../shared/ui/action-tracker/action-tracker.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
+import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
@@ -30,6 +32,8 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     SolicitudePageLayoutComponent,
     SolicitudeInfoCardComponent,
     SolicitudeFormCardComponent,
+    ActionTrackerComponent,
+    DocumentSummaryCardComponent,
     ButtonComponent,
     ModalComponent,
     SnackbarComponent,
@@ -41,17 +45,26 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <siaf-solicitude-page-layout
         [breadcrumbs]="breadcrumbs"
         role="creator"
-        state="new"
+        [state]="estado()"
         [heading]="heading"
         secondaryText="Creación"
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
         [saveDisabled]="mostrandoForm() || registros().length === 0"
-        [verifyDisabled]="true"
+        [verifyDisabled]="!elaborado()"
         (returned)="regresar()"
         (canceled)="regresar()"
+        (saved)="modalGrabar.set(true)"
+        (edited)="editar()"
       >
-        <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
+        @if (elaborado()) {
+          <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
+            <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
+            <siaf-document-summary-card [documentNumber]="numeroDocumento" />
+          </section>
+        } @else {
+          <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
+        }
 
         <siaf-solicitude-form-card title="Registro de indicador de desempeño">
           <div card-actions class="flex items-center gap-siaf-sm">
@@ -137,7 +150,23 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             </div>
           }
         </siaf-solicitude-form-card>
+
+        @if (elaborado()) {
+          <siaf-action-tracker [showSummaryCards]="true" [showTabs]="false" [summaryItems]="trazabilidad()" />
+        }
       </siaf-solicitude-page-layout>
+
+      <!-- Confirmación de grabado del documento. -->
+      <siaf-modal
+        [open]="modalGrabar()"
+        variant="save"
+        title="¿Grabar documento?"
+        description="Los registros se grabarán en este documento."
+        [showIllustration]="true"
+        (confirmed)="confirmarGrabar()"
+        (canceled)="modalGrabar.set(false)"
+        (closed)="modalGrabar.set(false)"
+      />
 
       <!-- Confirmación de borrado del registro seleccionado. -->
       <siaf-modal
@@ -152,6 +181,16 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <!-- Aviso de registro exitoso (aparece con un breve retraso tras aceptar). -->
       <div class="fixed bottom-6 right-6 z-[60]">
         <siaf-snackbar [open]="snackbarVisible()" variant="record-done" (closed)="snackbarVisible.set(false)" />
+      </div>
+
+      <!-- Aviso de documento elaborado (aparece tras grabar). -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar
+          [open]="snackbarElaboradoVisible()"
+          variant="creation-elaborated"
+          [requestNumber]="numeroDocumento"
+          (closed)="snackbarElaboradoVisible.set(false)"
+        />
       </div>
 
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
@@ -178,9 +217,26 @@ export class IndicadorDesempenoRequestComponent {
   readonly registros = signal<IndicadorRegistrado[]>([]);
   readonly seleccionados = signal<Set<number>>(new Set());
   readonly modalEliminar = signal(false);
+  readonly modalGrabar = signal(false);
   readonly snackbarVisible = signal(false);
   readonly snackbarEliminadoVisible = signal(false);
+  readonly snackbarElaboradoVisible = signal(false);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
+
+  // Estado del documento: «new» (Nuevo) hasta grabar, luego «elaborated» (Elaborado).
+  readonly estado = signal<'new' | 'elaborated'>('new');
+  readonly elaborado = computed(() => this.estado() === 'elaborated');
+  readonly numeroDocumento = '0001';
+  private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
+  private readonly fechaElaboracion = signal('');
+
+  // Trazabilidad: solo Elaborado queda registrado; el resto aún no.
+  readonly trazabilidad = computed<ActionTrackerSummary[]>(() => [
+    { label: 'Elaborado por', actionBy: this.elaboradorNombre, date: this.fechaElaboracion() },
+    { label: 'Verificado por', actionBy: '', date: '' },
+    { label: 'Validado por', actionBy: '', date: '' },
+    { label: 'Aceptado por', actionBy: '', date: '' },
+  ]);
 
   // Migas como el diseño: Inicio › Catálogo de indicadores de desempeño › Registro.
   readonly breadcrumbs: BreadcrumbItem[] = [
@@ -237,6 +293,20 @@ export class IndicadorDesempenoRequestComponent {
   /** Vuelve a abrir el formulario de detalle para editar el registro seleccionado. */
   editarSeleccionado(): void {
     this.mostrandoForm.set(true);
+  }
+
+  /** Confirma el grabado: el documento pasa a «Elaborado», se registra la trazabilidad y se avisa. */
+  confirmarGrabar(): void {
+    this.modalGrabar.set(false);
+    this.fechaElaboracion.set(new Date().toLocaleString('es-PE'));
+    this.estado.set('elaborated');
+    setTimeout(() => this.snackbarElaboradoVisible.set(true), 300);
+    setTimeout(() => this.snackbarElaboradoVisible.set(false), 300 + 5000);
+  }
+
+  /** Vuelve a edición (estado «Nuevo») para modificar el documento elaborado. */
+  editar(): void {
+    this.estado.set('new');
   }
 
   /** Confirma el borrado desde el modal: elimina los registros marcados, lo cierra y avisa. */
