@@ -153,6 +153,17 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <div class="fixed bottom-6 right-6 z-[60]">
         <siaf-snackbar [open]="snackbarVisible()" variant="record-done" (closed)="snackbarVisible.set(false)" />
       </div>
+
+      <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar
+          [open]="snackbarEliminadoVisible()"
+          variant="custom"
+          tone="success"
+          message="El registro ha sido eliminado con éxito del listado."
+          (closed)="snackbarEliminadoVisible.set(false)"
+        />
+      </div>
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -168,6 +179,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly seleccionados = signal<Set<number>>(new Set());
   readonly modalEliminar = signal(false);
   readonly snackbarVisible = signal(false);
+  readonly snackbarEliminadoVisible = signal(false);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Migas como el diseño: Inicio › Catálogo de indicadores de desempeño › Registro.
@@ -227,11 +239,14 @@ export class IndicadorDesempenoRequestComponent {
     this.mostrandoForm.set(true);
   }
 
-  /** Confirma el borrado desde el modal: elimina los registros marcados y lo cierra. */
+  /** Confirma el borrado desde el modal: elimina los registros marcados, lo cierra y avisa. */
   confirmarEliminar(): void {
     const ids = this.seleccionados();
     this.registros.update((r) => r.filter((registro) => !ids.has(registro.id)));
     this.seleccionados.set(new Set());
     this.modalEliminar.set(false);
+    // El aviso aparece una vez cerrado el modal y se oculta solo.
+    setTimeout(() => this.snackbarEliminadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarEliminadoVisible.set(false), 300 + 5000);
   }
 }
