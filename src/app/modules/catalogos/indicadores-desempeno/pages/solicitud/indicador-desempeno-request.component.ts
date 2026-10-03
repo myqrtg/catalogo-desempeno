@@ -14,6 +14,7 @@ import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.co
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
 import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './indicador-desempeno-detalle.component';
+import { IndicadorDesempenoDetalleVistaComponent } from './indicador-desempeno-detalle-vista.component';
 
 /** Registro de indicador ya agregado a la solicitud (fila de la tabla). */
 interface IndicadorRegistrado extends IndicadorDetalleResumen {
@@ -40,8 +41,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     SnackbarComponent,
     TooltipDirective,
     IndicadorDesempenoDetalleComponent,
+    IndicadorDesempenoDetalleVistaComponent,
   ],
   template: `
+    @if (detalleVisto(); as indicador) {
+      <siaf-indicador-desempeno-detalle-vista [indicador]="indicador" (back)="detalleVisto.set(null)" />
+    } @else {
     <div class="min-h-[calc(100vh-56px)] bg-[var(--sys-color-bg-surfaces-surface-lowest)] text-text">
       <siaf-solicitude-page-layout
         [breadcrumbs]="breadcrumbs"
@@ -119,8 +124,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                     @for (registro of registros(); track registro.id) {
                       <tr class="border-b border-[var(--sys-color-divider-default)]">
                         <td class="px-siaf-md py-siaf-sm text-center"><input type="checkbox" class="size-5" [checked]="seleccionados().has(registro.id)" (change)="alternarUno(registro.id, $any($event.target).checked)" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
-                        <td class="px-siaf-md py-siaf-sm font-bold">{{ registro.codigo }}</td>
-                        <td class="px-siaf-md py-siaf-sm">{{ registro.nombre }}</td>
+                        <td class="px-siaf-md py-siaf-sm font-bold">
+                          <button type="button" class="font-bold text-[var(--sys-color-text-brand-primary)] underline-offset-2 hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sys-color-border-states-focus)]" (click)="verDetalle(registro)">{{ registro.codigo }}</button>
+                        </td>
+                        <td class="px-siaf-md py-siaf-sm">
+                          <button type="button" class="text-left hover:underline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sys-color-border-states-focus)]" (click)="verDetalle(registro)">{{ registro.nombre }}</button>
+                        </td>
                         <td class="px-siaf-md py-siaf-sm">{{ registro.nivelMedicion }}</td>
                         <td class="px-siaf-md py-siaf-sm">{{ registro.dimension }}</td>
                         <td class="px-siaf-md py-siaf-sm">{{ registro.programa }}</td>
@@ -229,6 +238,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         />
       </div>
     </div>
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -248,6 +258,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly snackbarEliminadoVisible = signal(false);
   readonly snackbarElaboradoVisible = signal(false);
   readonly snackbarVerificadoVisible = signal(false);
+  readonly detalleVisto = signal<IndicadorRegistrado | null>(null);
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
@@ -287,6 +298,11 @@ export class IndicadorDesempenoRequestComponent {
 
   regresar(): void {
     void this.router.navigate(['/panel']);
+  }
+
+  /** Abre la pantalla de detalle de solo lectura del indicador seleccionado. */
+  verDetalle(registro: IndicadorRegistrado): void {
+    this.detalleVisto.set(registro);
   }
 
   abrirForm(): void {

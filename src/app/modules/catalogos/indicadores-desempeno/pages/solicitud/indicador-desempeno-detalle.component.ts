@@ -109,8 +109,17 @@ const SUG_VALID_DESCRIPCION: string[] = [
   'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.',
 ];
 
-/** Resumen que se agrega a la tabla de registros de la solicitud al aceptar. */
+export interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
+export interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
+export interface FilaValidacion { elemento: string; descripcion: string; }
+export interface ArchivoInfo { nombre: string; tamano: string; }
+
+/**
+ * Datos completos del indicador que se registran al aceptar: los de la tabla de la solicitud más todos los campos del
+ * detalle, para poder mostrarlos de solo lectura en la pantalla «Detalle de indicador de desempeño».
+ */
 export interface IndicadorDetalleResumen {
+  // ── Resumen que muestra la tabla de registros ──
   codigo: string;
   nombre: string;
   nivelMedicion: string;
@@ -125,6 +134,31 @@ export interface IndicadorDetalleResumen {
   estado: string;
   fechaDesde: string;
   fechaHasta: string;
+  // ── Detalle completo (solo lectura) ──
+  programaCodigo: string;
+  programaNombre: string;
+  respCodigo: string;
+  respNombre: string;
+  productoCodigo: string;
+  productoNombre: string;
+  unidadMedida: string;
+  sentido: string;
+  tipoCalculo: string;
+  numerador: string;
+  denominador: string;
+  tipoFuente: string;
+  fuenteDatos: string;
+  limitacion: string;
+  supuestos: string;
+  precisiones: string;
+  periodicidad: string;
+  alcanceGeografico: string;
+  nivelResponsable: string;
+  desagregaciones: FilaDesagregacion[];
+  variables: FilaVariable[];
+  validaciones: FilaValidacion[];
+  codigoComentado: ArchivoInfo | null;
+  sustento: ArchivoInfo | null;
 }
 
 interface ProgramaPresupuestal {
@@ -163,10 +197,6 @@ const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
   { id: '3033263', codigo: '3033263', nombre: 'Gestante con suplemento de hierro y ácido fólico' },
   { id: '3033264', codigo: '3033264', nombre: 'Municipios saludables promueven el cuidado infantil' },
 ];
-
-interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
-interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
-interface FilaValidacion { elemento: string; descripcion: string; }
 
 /**
  * Formulario «Registro de indicador de desempeño» (DETALLE) que reemplaza el estado vacío de la tarjeta al pulsar «+».
@@ -354,9 +384,16 @@ export class IndicadorDesempenoDetalleComponent {
   aceptar(): void {
     if (!this.aceptarHabilitado()) return;
     const dimension = this.opcDimension.find((o) => o.value === this.dimension())?.label ?? this.dimension();
+    const tipoCalculo = this.opcTipoCalculo.find((o) => o.value === this.tipoCalculo())?.label ?? this.tipoCalculo();
     const siNo = (v: string) => (v === 'SI' ? 'Sí' : v === 'NO' ? 'No' : v);
     const p = this.programa();
     const pr = this.producto();
+    const archivo = (f: UploadedFileInfo | null): ArchivoInfo | null => {
+      if (!f) return null;
+      const bytes = f instanceof File ? f.size : f.size;
+      const kb = bytes ? `${Math.max(1, Math.round(bytes / 1024))}kb` : '';
+      return { nombre: f.name, tamano: kb };
+    };
     this.saved.emit({
       codigo: this.codigo().trim(),
       nombre: this.nombre().trim(),
@@ -372,6 +409,30 @@ export class IndicadorDesempenoDetalleComponent {
       estado: siNo(this.estadoVigencia()),
       fechaDesde: this.fechaDesde(),
       fechaHasta: this.fechaHasta(),
+      programaCodigo: p?.codigo ?? '',
+      programaNombre: p?.nombre ?? '',
+      respCodigo: p?.respCodigo ?? '',
+      respNombre: p?.respNombre ?? '',
+      productoCodigo: pr?.codigo ?? '',
+      productoNombre: pr?.nombre ?? '',
+      unidadMedida: this.unidadMedida(),
+      sentido: this.sentido(),
+      tipoCalculo,
+      numerador: this.numerador().trim(),
+      denominador: this.denominador().trim(),
+      tipoFuente: this.tipoFuente(),
+      fuenteDatos: this.fuenteDatos().trim(),
+      limitacion: this.limitacion().trim(),
+      supuestos: this.supuestos().trim(),
+      precisiones: this.precisiones().trim(),
+      periodicidad: this.periodicidad(),
+      alcanceGeografico: this.alcanceGeografico(),
+      nivelResponsable: this.nivelResponsable(),
+      desagregaciones: this.desagregaciones().filter((f) => f.ambito || f.area || f.periodicidad),
+      variables: this.variables().filter((f) => f.variable || f.descripcion || f.fuente || f.tipoVariable),
+      validaciones: this.validaciones().filter((f) => f.elemento || f.descripcion),
+      codigoComentado: archivo(this.codigoComentado()),
+      sustento: archivo(this.sustento()),
     });
   }
 
