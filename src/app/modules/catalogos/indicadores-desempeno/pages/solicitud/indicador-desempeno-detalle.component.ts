@@ -325,16 +325,11 @@ export class IndicadorDesempenoDetalleComponent {
     { value: 'economia', label: '4. Economía' },
   ];
 
-  // Unidades de medida por dimensión (solo «Eficacia» está confirmada por el diseño; el resto son de ejemplo).
-  private readonly unidadesPorDimension: Record<string, string[]> = {
-    eficacia: ['Porcentaje', 'Tasa', 'Ratio', 'Índice'],
-    eficiencia: ['Porcentaje', 'Tasa', 'Ratio'],
-    calidad: ['Porcentaje', 'Índice', 'Nivel de satisfacción'],
-    economia: ['Soles', 'Porcentaje', 'Ratio'],
-  };
+  // Unidades de medida: las mismas opciones para cualquier dimensión de desempeño.
+  private readonly unidadesMedida: string[] = ['Porcentaje', 'Tasa', 'Ratio', 'Índice'];
 
   readonly opcUnidad = computed(() =>
-    (this.unidadesPorDimension[this.dimension()] ?? []).map((v) => ({ value: v, label: v })),
+    this.dimension() ? this.unidadesMedida.map((v) => ({ value: v, label: v })) : [],
   );
   readonly opcTipoFuente = ['INEI', 'Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
