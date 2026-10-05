@@ -90,8 +90,12 @@
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Método de cálculo</h4>
     <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
-    <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador" [value]="numerador()" (valueChange)="numerador.set($event)" />
-    <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador" [value]="denominador()" (valueChange)="denominador.set($event)" />
+    @if (tipoCalculo() === 'otro') {
+      <siaf-text-autocomplete [multiline]="true" label="Otro tipo de cálculo" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasFormula" [value]="formula()" (valueChange)="formula.set($event)" />
+    } @else {
+      <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador" [value]="numerador()" (valueChange)="numerador.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador" [value]="denominador()" (valueChange)="denominador.set($event)" />
+    }
   </div>
 
   <!-- Fuentes de información -->

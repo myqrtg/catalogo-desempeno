@@ -121,14 +121,21 @@ import { IndicadorDetalleResumen } from './indicador-desempeno-detalle.component
               <span class="text-xs text-text-muted">Tipo de cálculo</span>
               <span class="text-sm text-text">{{ v(indicador.tipoCalculo) }}</span>
             </div>
-            <div class="flex flex-col gap-siaf-xxs">
-              <span class="text-xs text-text-muted">Numerador</span>
-              <span class="text-sm text-text">{{ v(indicador.numerador) }}</span>
-            </div>
-            <div class="flex flex-col gap-siaf-xxs">
-              <span class="text-xs text-text-muted">Denominador</span>
-              <span class="text-sm text-text">{{ v(indicador.denominador) }}</span>
-            </div>
+            @if (indicador.formula) {
+              <div class="flex flex-col gap-siaf-xxs">
+                <span class="text-xs text-text-muted">Otro tipo de cálculo</span>
+                <span class="whitespace-pre-line text-sm text-text">{{ v(indicador.formula) }}</span>
+              </div>
+            } @else {
+              <div class="flex flex-col gap-siaf-xxs">
+                <span class="text-xs text-text-muted">Numerador</span>
+                <span class="text-sm text-text">{{ v(indicador.numerador) }}</span>
+              </div>
+              <div class="flex flex-col gap-siaf-xxs">
+                <span class="text-xs text-text-muted">Denominador</span>
+                <span class="text-sm text-text">{{ v(indicador.denominador) }}</span>
+              </div>
+            }
           </div>
 
           <div class="flex flex-col gap-siaf-sm">

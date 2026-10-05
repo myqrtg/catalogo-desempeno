@@ -35,6 +35,12 @@ const SUGERENCIAS_DENOMINADOR: string[] = [
   'total de gestantes atendidas en el periodo.',
 ];
 
+// Sugerencias para «Otro tipo de cálculo»: la fórmula completa con sus variables.
+const SUGERENCIAS_FORMULA: string[] = [
+  'RAFA = [SLCCP + SVCP]\nVARIABLES:\nRAFA: RECAUDACION POR ACCIONES DE FISCALIZACION ADUANERA\nSLCCP: SUMATORIA DE LIQUIDACIONES DE COBRANZA EMITIDAS EN CONTROL POSTERIOR CANCELADAS\nSVCP: SUMATORIA DE VALORES EMITIDOS EN CONTROL POSTERIOR CANCELADOS',
+  'IEP = (GE / GP) * 100\nVARIABLES:\nIEP: ÍNDICE DE EJECUCIÓN PRESUPUESTAL\nGE: GASTO EJECUTADO\nGP: GASTO PROGRAMADO',
+];
+
 const SUGERENCIAS_FUENTE: string[] = [
   'ENCUESTA DEMOGRAFICA Y DE SALUD FAMILIAR (ENDES)',
   'Registro Nominal de Atenciones (HIS - MINSA)',
@@ -146,6 +152,7 @@ export interface IndicadorDetalleResumen {
   tipoCalculo: string;
   numerador: string;
   denominador: string;
+  formula: string;
   tipoFuente: string;
   fuenteDatos: string;
   limitacion: string;
@@ -255,6 +262,7 @@ export class IndicadorDesempenoDetalleComponent {
   readonly tipoCalculo = signal('');
   readonly numerador = signal('');
   readonly denominador = signal('');
+  readonly formula = signal('');
   readonly tipoFuente = signal('');
   readonly fuenteDatos = signal('');
   readonly limitacion = signal('');
@@ -342,6 +350,7 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcPeriodicidadTabla = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
   readonly nombresIndicador = NOMBRES_INDICADOR;
   readonly sugerenciasNumerador = SUGERENCIAS_NUMERADOR;
+  readonly sugerenciasFormula = SUGERENCIAS_FORMULA;
   readonly sugerenciasDenominador = SUGERENCIAS_DENOMINADOR;
   readonly sugerenciasFuente = SUGERENCIAS_FUENTE;
   readonly sugerenciasLimitacion = SUGERENCIAS_LIMITACION;
@@ -370,7 +379,8 @@ export class IndicadorDesempenoDetalleComponent {
       !!this.programa() && productoOk
       && req(this.nombre())
       && req(this.nivelMedicion()) && req(this.dimension()) && req(this.unidadMedida()) && req(this.sentido())
-      && req(this.tipoCalculo()) && req(this.numerador())
+      && req(this.tipoCalculo())
+      && (this.tipoCalculo() === 'otro' ? req(this.formula()) : req(this.numerador()))
       && req(this.tipoFuente()) && req(this.fuenteDatos())
       && req(this.limitacion()) && req(this.supuestos()) && req(this.precisiones())
       && req(this.periodicidad())
@@ -418,8 +428,9 @@ export class IndicadorDesempenoDetalleComponent {
       unidadMedida: this.unidadMedida(),
       sentido: this.sentido(),
       tipoCalculo,
-      numerador: this.numerador().trim(),
-      denominador: this.denominador().trim(),
+      numerador: this.tipoCalculo() === 'otro' ? '' : this.numerador().trim(),
+      denominador: this.tipoCalculo() === 'otro' ? '' : this.denominador().trim(),
+      formula: this.tipoCalculo() === 'otro' ? this.formula().trim() : '',
       tipoFuente: this.tipoFuente(),
       fuenteDatos: this.fuenteDatos().trim(),
       limitacion: this.limitacion().trim(),
