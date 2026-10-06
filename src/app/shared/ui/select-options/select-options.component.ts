@@ -120,7 +120,7 @@ export interface SelectOption {
       } @else {
       @for (option of options; track option.value; let i = $index) {
         <button
-          class="flex min-h-12 w-full items-center gap-siaf-md px-siaf-md py-siaf-sm text-left text-sm leading-normal outline-none transition hover:bg-[var(--sys-color-bg-states-light-hover)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--sys-color-border-states-focus)] active:bg-[var(--sys-color-bg-states-light-pressed)] disabled:cursor-not-allowed disabled:text-[var(--sys-color-text-neutral-disabled)]"
+          class="group flex min-h-12 w-full items-center gap-siaf-md px-siaf-md py-siaf-sm text-left text-sm leading-normal outline-none transition hover:bg-[var(--sys-color-bg-states-light-selected)] focus-visible:outline-solid focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--sys-color-border-states-focus)] active:bg-[var(--sys-color-bg-states-light-pressed)] disabled:cursor-not-allowed disabled:text-[var(--sys-color-text-neutral-disabled)]"
           type="button"
           role="option"
           [disabled]="option.disabled"
@@ -135,7 +135,7 @@ export interface SelectOption {
           (keydown.home)="focusBoundary($event, 'first')"
           (keydown.end)="focusBoundary($event, 'last')"
         >
-          <span class="min-w-0 flex-1 truncate" siafTooltip [ngClass]="optionLabelClass(option.value)">{{ option.label }}</span>
+          <span class="min-w-0 flex-1 truncate group-hover:font-bold group-hover:text-[var(--sys-color-text-neutral-activated)]" siafTooltip [ngClass]="optionLabelClass(option.value)">{{ option.label }}</span>
           @if (isSelected(option.value)) {
             <siaf-icon
               class="shrink-0 text-[var(--sys-color-text-neutral-activated)]"
