@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { SolicitudeFormCardComponent } from '../../../../../shared/components/solicitude-form-card/solicitude-form-card.component';
 import { SolicitudeInfoCardComponent, SolicitudeInfoField } from '../../../../../shared/components/solicitude-info-card/solicitude-info-card.component';
@@ -10,6 +10,7 @@ import { ButtonComponent } from '../../../../../shared/ui/button/button.componen
 import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
 import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status-tag.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
+import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
@@ -38,6 +39,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     DocumentSummaryCardComponent,
     ButtonComponent,
     ModalComponent,
+    TextFieldComponent,
     SnackbarComponent,
     TooltipDirective,
     IndicadorDesempenoDetalleComponent,
@@ -53,18 +55,18 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         role="creator"
         [state]="estado()"
         [heading]="heading"
-        secondaryText="Creación"
+        [secondaryText]="secondaryText()"
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
-        [saveDisabled]="mostrandoForm() || registros().length === 0"
-        [verifyDisabled]="!elaborado()"
+        [saveDisabled]="esModificacion() || mostrandoForm() || registros().length === 0"
+        [verifyDisabled]="esModificacion() || !elaborado()"
         (returned)="regresar()"
         (canceled)="regresar()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
         (verified)="modalVerificar.set(true)"
       >
-        @if (grabado()) {
+        @if (grabado() && !esModificacion()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
             <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
             <siaf-document-summary-card [documentNumber]="numeroDocumento" [status]="estadoDocumento()" />
@@ -73,6 +75,31 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
         }
 
+        @if (esModificacion()) {
+          <siaf-solicitude-form-card title="Tipo de modificación">
+            <siaf-input
+              class="block md:max-w-[360px]"
+              type="select"
+              placeholder="Tipo de modificación"
+              [options]="opcTipoModificacion"
+              [value]="tipoModificacion()"
+              (valueChange)="tipoModificacion.set($any($event))"
+            />
+          </siaf-solicitude-form-card>
+
+          @if (tipoModificacion() === 'atributos') {
+            <siaf-solicitude-form-card title="Modificación de indicador de desempeño">
+              <div card-actions class="flex items-center gap-siaf-sm">
+                <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar" siafTooltip="Buscar" (click)="modalBuscarIndicador.set(true)" />
+              </div>
+              <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+                <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">
+                  No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.
+                </p>
+              </div>
+            </siaf-solicitude-form-card>
+          }
+        } @else {
         <siaf-solicitude-form-card title="Registro de indicador de desempeño">
           <div card-actions class="flex items-center gap-siaf-sm">
             @if (mostrandoForm()) {
@@ -165,6 +192,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         @if (grabado()) {
           <siaf-action-tracker [showSummaryCards]="true" [showTabs]="false" [summaryItems]="trazabilidad()" />
         }
+        }
       </siaf-solicitude-page-layout>
 
       <!-- Confirmación de grabado del documento. -->
@@ -244,9 +272,23 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 })
 export class IndicadorDesempenoRequestComponent {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly heading = NOMBRE_DOCUMENTO;
   readonly detalle = viewChild(IndicadorDesempenoDetalleComponent);
+
+  // Tipo de acción del documento (de la ruta): creacion (por defecto), modificacion o anulacion.
+  readonly actionType = signal(this.route.snapshot.queryParamMap.get('actionType') ?? 'creacion');
+  readonly esModificacion = computed(() => this.actionType() === 'modificacion');
+  readonly secondaryText = computed(() => (this.esModificacion() ? 'Modificación' : 'Creación'));
+
+  // Modificación: tipo (Atributos / Año fin de medición), elegido a mano.
+  readonly tipoModificacion = signal('');
+  readonly modalBuscarIndicador = signal(false);
+  readonly opcTipoModificacion = [
+    { label: 'Atributos', value: 'atributos' },
+    { label: 'Año fin de medición', value: 'anio-fin' },
+  ];
 
   readonly mostrandoForm = signal(false);
   readonly registros = signal<IndicadorRegistrado[]>([]);
