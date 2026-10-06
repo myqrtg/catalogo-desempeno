@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { SolicitudeFormCardComponent } from '../../../../../shared/components/solicitude-form-card/solicitude-form-card.component';
@@ -94,10 +94,20 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 
           @if (tipoModificacion() === 'atributos') {
             <siaf-solicitude-form-card title="Modificación de indicador de desempeño">
-              <div card-actions class="flex items-center gap-siaf-sm">
-                <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" [disabled]="indicadoresModificar().length > 0" ariaLabel="Buscar" siafTooltip="Buscar" (click)="modalBuscarIndicador.set(true)" />
-              </div>
-              @if (indicadoresModificar().length) {
+              @if (editandoIndicador()) {
+                <div card-actions class="flex items-center gap-siaf-sm">
+                  <siaf-button variant="secondary" size="md" (click)="cancelarEdicionMod()">Cancelar</siaf-button>
+                  <siaf-button variant="accent" size="md" [disabled]="!detalle()?.aceptarHabilitado()" (click)="aceptarEdicionMod()">Aceptar</siaf-button>
+                </div>
+              } @else {
+                <div card-actions class="flex items-center gap-siaf-sm">
+                  <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" [disabled]="indicadoresModificar().length > 0" ariaLabel="Buscar" siafTooltip="Buscar" (click)="modalBuscarIndicador.set(true)" />
+                </div>
+              }
+
+              @if (editandoIndicador()) {
+                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
+              } @else if (indicadoresModificar().length) {
                 <div class="flex flex-col gap-siaf-md">
                   <!-- Buscador de la tabla + filtro y más opciones. -->
                   <div class="flex items-center gap-siaf-md">
@@ -108,6 +118,10 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 
                   <div class="flex items-center gap-siaf-sm">
                     <input type="checkbox" class="size-5" [checked]="todosModSeleccionados()" (change)="alternarTodosMod($any($event.target).checked)" aria-label="Seleccionar todos los indicadores" />
+                    @if (modSeleccionados().size > 0) {
+                      <siaf-button variant="text" size="md" icon="edit" [iconOnly]="true" ariaLabel="Editar" siafTooltip="Editar" (click)="editarSeleccionadoMod()" />
+                      <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="eliminarSeleccionadosMod()" />
+                    }
                   </div>
 
                   <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
@@ -343,6 +357,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 export class IndicadorDesempenoRequestComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly heading = NOMBRE_DOCUMENTO;
   readonly detalle = viewChild(IndicadorDesempenoDetalleComponent);
@@ -359,6 +374,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly idsModificar = computed(() => this.indicadoresModificar().map((i) => i.codigo));
   readonly busquedaMod = signal('');
   readonly modSeleccionados = signal<Set<string>>(new Set());
+  readonly editandoIndicador = signal<IndicadorDemo | null>(null);
 
   readonly indicadoresModificarFiltrados = computed<IndicadorDemo[]>(() => {
     const q = this.busquedaMod().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -477,6 +493,32 @@ export class IndicadorDesempenoRequestComponent {
       if (marcado) next.add(codigo); else next.delete(codigo);
       return next;
     });
+  }
+
+  /** Abre el formulario DETALLE pre-cargado con el primer indicador marcado. */
+  editarSeleccionadoMod(): void {
+    const codigo = [...this.modSeleccionados()][0];
+    const ind = this.indicadoresModificar().find((i) => i.codigo === codigo);
+    if (!ind) return;
+    this.editandoIndicador.set(ind);
+    // El formulario hijo se monta y se rellena tras este tick; re-evaluamos para que «Aceptar» salga ya habilitado.
+    setTimeout(() => this.cdr.markForCheck());
+  }
+
+  /** Elimina los indicadores marcados de la tabla de modificación. */
+  eliminarSeleccionadosMod(): void {
+    const ids = this.modSeleccionados();
+    this.indicadoresModificar.update((lista) => lista.filter((i) => !ids.has(i.codigo)));
+    this.modSeleccionados.set(new Set());
+  }
+
+  cancelarEdicionMod(): void {
+    this.editandoIndicador.set(null);
+  }
+
+  aceptarEdicionMod(): void {
+    this.editandoIndicador.set(null);
+    this.modSeleccionados.set(new Set());
   }
 
   abrirForm(): void {

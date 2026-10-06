@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
 
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
@@ -232,6 +232,8 @@ const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
 export class IndicadorDesempenoDetalleComponent {
   @Output() canceled = new EventEmitter<void>();
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
+  /** Pre-carga el formulario con los datos de un indicador (para modificar). */
+  @Input() set prefill(ind: IndicadorDemo | null) { if (ind) this.cargarDesde(ind); }
 
   // ── Selección de programa y entidad ───────────────────────────────
   readonly programa = signal<ProgramaPresupuestal | null>(null);
@@ -547,6 +549,42 @@ export class IndicadorDesempenoDetalleComponent {
     this.validaciones.update((f) => f.map((fila, idx) => (idx === i
       ? { ...fila, elemento, ...(desc !== undefined ? { descripcion: desc } : {}) }
       : fila)));
+  }
+
+  /** Rellena todo el formulario con los datos de un indicador de ejemplo (del Excel), para modificarlo. */
+  cargarDesde(ind: IndicadorDemo): void {
+    this.programa.set(OPCIONES_PROGRAMA.find((p) => p.codigo === ind.pp) ?? null);
+    this.producto.set(ind.productoCodigo ? (OPCIONES_PRODUCTO.find((p) => p.codigo === ind.productoCodigo) ?? null) : null);
+    this.nombre.set(ind.nombre);
+    this.nivelMedicion.set(ind.nivelMedicion);
+    this.dimension.set(ind.dimension);
+    this.unidadMedida.set(ind.unidad);
+    this.sentido.set(ind.sentido);
+    this.tipoCalculo.set(ind.tipoCalculo);
+    this.numerador.set(ind.numerador);
+    this.denominador.set(ind.denominador);
+    this.formula.set(ind.formula);
+    this.tipoFuente.set(ind.tipoFuente);
+    this.fuenteDatos.set(ind.fuenteDatos);
+    this.limitacion.set(ind.limitacion);
+    this.supuestos.set(ind.supuestos);
+    this.precisiones.set(ind.precisiones);
+    this.periodicidad.set(ind.periodicidad);
+    this.alcanceGeografico.set(ind.alcance);
+    this.nivelResponsable.set(ind.nivelResponsable);
+    this.programacion.set(ind.programacion);
+    this.gestion.set(ind.gestion);
+    this.evaluacion.set(ind.evaluacion);
+    this.anioInicioMedicion.set(ind.anioInicio || '----');
+    this.anioFinMedicion.set(ind.anioFin || '----');
+    this.estadoVigencia.set(ind.estado);
+    this.fechaDesde.set(ind.fechaDesde || '--/--/----');
+    this.fechaHasta.set(ind.fechaHasta || '--/--/----');
+    this.desagregaciones.set(ind.desagregaciones.length ? ind.desagregaciones.map((d) => ({ ...d })) : [{ ambito: '', area: '', periodicidad: '' }]);
+    this.variables.set(ind.variables.length ? ind.variables.map((v) => ({ ...v })) : [{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
+    this.validaciones.set(ind.validaciones.length ? ind.validaciones.map((v) => ({ ...v })) : [{ elemento: '', descripcion: '' }]);
+    this.codigoComentado.set({ name: 'Código comentado.pdf', size: 500 * 1024 });
+    this.sustento.set({ name: 'Sustento.pdf', size: 500 * 1024 });
   }
 
   // ── Archivos ──────────────────────────────────────────────────────
