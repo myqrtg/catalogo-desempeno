@@ -63,7 +63,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         [secondaryText]="secondaryText()"
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
-        [saveDisabled]="esModificacion() || mostrandoForm() || registros().length === 0"
+        [saveDisabled]="esModificacion() ? !modCambiosGuardados() : (mostrandoForm() || registros().length === 0)"
         [verifyDisabled]="esModificacion() || !elaborado()"
         (returned)="regresar()"
         (canceled)="regresar()"
@@ -339,6 +339,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         />
       </div>
 
+      <!-- Aviso de cambios guardados (tras aceptar la edición en modificación). -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarCambiosVisible()" variant="changes-done" (closed)="snackbarCambiosVisible.set(false)" />
+      </div>
+
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar
@@ -375,6 +380,9 @@ export class IndicadorDesempenoRequestComponent {
   readonly busquedaMod = signal('');
   readonly modSeleccionados = signal<Set<string>>(new Set());
   readonly editandoIndicador = signal<IndicadorDemo | null>(null);
+  readonly snackbarCambiosVisible = signal(false);
+  /** Hay cambios confirmados en modificación: habilita «Grabar». */
+  readonly modCambiosGuardados = signal(false);
 
   readonly indicadoresModificarFiltrados = computed<IndicadorDemo[]>(() => {
     const q = this.busquedaMod().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -519,6 +527,10 @@ export class IndicadorDesempenoRequestComponent {
   aceptarEdicionMod(): void {
     this.editandoIndicador.set(null);
     this.modSeleccionados.set(new Set());
+    this.modCambiosGuardados.set(true);
+    // Aviso de cambios guardados, una vez que ya se ve la tabla.
+    setTimeout(() => this.snackbarCambiosVisible.set(true), 300);
+    setTimeout(() => this.snackbarCambiosVisible.set(false), 300 + 5000);
   }
 
   abrirForm(): void {
