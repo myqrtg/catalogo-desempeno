@@ -8,6 +8,7 @@ import { UploadedFileCardComponent, UploadedFileInfo } from '../../../../../shar
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { CatalogColumn, CatalogRow, CatalogSelectionModalComponent } from './catalog-selection-modal.component';
 import { TextAutocompleteComponent } from './text-autocomplete.component';
+import { INDICADORES_DEMO, IndicadorDemo } from './indicadores-demo';
 
 /** Sugerencias de autocompletado para el nombre del indicador (datos de ejemplo del taller). */
 const NOMBRES_INDICADOR: string[] = [
@@ -312,7 +313,8 @@ export class IndicadorDesempenoDetalleComponent {
   ];
   readonly opcAlcance = [
     { label: 'Nacional', value: 'Nacional' },
-    { label: 'Nacional y regional', value: 'Nacional y regional' },
+    { label: 'Nacional y Regional', value: 'Nacional y Regional' },
+    { label: 'Nacional, Regional y Local', value: 'Nacional, Regional y Local' },
   ];
   readonly opcSiNo = [
     { label: 'Sí', value: 'SI' },
@@ -343,20 +345,33 @@ export class IndicadorDesempenoDetalleComponent {
   ].map((v) => ({ value: v, label: v }));
   readonly opcArea = ['1 TOTAL', '2 URBANO', '3 RURAL'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidadTabla = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
-  readonly nombresIndicador = NOMBRES_INDICADOR;
-  readonly sugerenciasNumerador = SUGERENCIAS_NUMERADOR;
-  readonly sugerenciasFormula = SUGERENCIAS_FORMULA;
-  readonly sugerenciasDenominador = SUGERENCIAS_DENOMINADOR;
-  readonly sugerenciasFuente = SUGERENCIAS_FUENTE;
-  readonly sugerenciasLimitacion = SUGERENCIAS_LIMITACION;
-  readonly sugerenciasSupuestos = SUGERENCIAS_SUPUESTOS;
-  readonly sugerenciasPrecisiones = SUGERENCIAS_PRECISIONES;
-  readonly sugDiccVariable = SUG_DICC_VARIABLE;
-  readonly sugDiccDescripcion = SUG_DICC_DESCRIPCION;
-  readonly sugDiccFuente = SUG_DICC_FUENTE;
-  readonly sugDiccTipo = SUG_DICC_TIPO;
-  readonly sugValidElemento = SUG_VALID_ELEMENTO;
-  readonly sugValidDescripcion = SUG_VALID_DESCRIPCION;
+  // Indicadores de ejemplo del programa elegido (del Excel del taller); si no hay programa, todos.
+  readonly indicadoresDelPrograma = computed<IndicadorDemo[]>(() => {
+    const pp = this.programa()?.codigo ?? '';
+    return pp ? INDICADORES_DEMO.filter((i) => i.pp === pp) : INDICADORES_DEMO;
+  });
+
+  /** Lista sin vacíos ni duplicados; si queda vacía usa el respaldo general. */
+  private conRespaldo(valores: string[], respaldo: string[]): string[] {
+    const limpios = [...new Set(valores.map((v) => (v ?? '').trim()).filter((v) => v.length))];
+    return limpios.length ? limpios : respaldo;
+  }
+
+  // Sugerencias de autocompletado acotadas al programa elegido (cada campo se completa a mano eligiendo una opción).
+  readonly nombresIndicador = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.nombre), NOMBRES_INDICADOR));
+  readonly sugerenciasNumerador = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.numerador), SUGERENCIAS_NUMERADOR));
+  readonly sugerenciasFormula = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.formula), SUGERENCIAS_FORMULA));
+  readonly sugerenciasDenominador = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.denominador), SUGERENCIAS_DENOMINADOR));
+  readonly sugerenciasFuente = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.fuenteDatos), SUGERENCIAS_FUENTE));
+  readonly sugerenciasLimitacion = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.limitacion), SUGERENCIAS_LIMITACION));
+  readonly sugerenciasSupuestos = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.supuestos), SUGERENCIAS_SUPUESTOS));
+  readonly sugerenciasPrecisiones = computed(() => this.conRespaldo(this.indicadoresDelPrograma().map((i) => i.precisiones), SUGERENCIAS_PRECISIONES));
+  readonly sugDiccVariable = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.variables.map((v) => v.variable)), SUG_DICC_VARIABLE));
+  readonly sugDiccDescripcion = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.variables.map((v) => v.descripcion)), SUG_DICC_DESCRIPCION));
+  readonly sugDiccFuente = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.variables.map((v) => v.fuente)), SUG_DICC_FUENTE));
+  readonly sugDiccTipo = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.variables.map((v) => v.tipoVariable)), SUG_DICC_TIPO));
+  readonly sugValidElemento = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.validaciones.map((v) => v.elemento)), SUG_VALID_ELEMENTO));
+  readonly sugValidDescripcion = computed(() => this.conRespaldo(this.indicadoresDelPrograma().flatMap((i) => i.validaciones.map((v) => v.descripcion)), SUG_VALID_DESCRIPCION));
 
   // ── Aceptar ───────────────────────────────────────────────────────
   /**
@@ -506,7 +521,8 @@ export class IndicadorDesempenoDetalleComponent {
   }
   /** Al elegir una Variable conocida, autocompleta Descripción, Fuente y Tipo de esa fila. */
   onVariableSeleccionada(i: number, variable: string): void {
-    const d = DICC_POR_VARIABLE[variable];
+    const delPrograma = this.indicadoresDelPrograma().flatMap((ind) => ind.variables).find((v) => v.variable === variable);
+    const d = delPrograma ?? DICC_POR_VARIABLE[variable];
     this.variables.update((f) => f.map((fila, idx) => (idx === i
       ? { ...fila, variable, ...(d ? { descripcion: d.descripcion, fuente: d.fuente, tipoVariable: d.tipoVariable } : {}) }
       : fila)));
@@ -526,7 +542,8 @@ export class IndicadorDesempenoDetalleComponent {
   }
   /** Al elegir un Elemento conocido, autocompleta su Descripción. */
   onElementoSeleccionado(i: number, elemento: string): void {
-    const desc = VALID_POR_ELEMENTO[elemento];
+    const delPrograma = this.indicadoresDelPrograma().flatMap((ind) => ind.validaciones).find((v) => v.elemento === elemento);
+    const desc = delPrograma?.descripcion ?? VALID_POR_ELEMENTO[elemento];
     this.validaciones.update((f) => f.map((fila, idx) => (idx === i
       ? { ...fila, elemento, ...(desc !== undefined ? { descripcion: desc } : {}) }
       : fila)));

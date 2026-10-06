@@ -50,7 +50,7 @@
     <h4 class="m-0 text-sm font-bold text-text">Indicador de desempeño</h4>
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-[220px_1fr]">
       <siaf-input label="Código" [required]="true" [disabled]="true" [value]="codigo()" />
-      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador" [value]="nombre()" (valueChange)="nombre.set($event)" />
+      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador()" [value]="nombre()" (valueChange)="nombre.set($event)" />
     </div>
   </div>
 
@@ -91,10 +91,10 @@
     <h4 class="m-0 text-sm font-bold text-text">Método de cálculo</h4>
     <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
     @if (tipoCalculo() === 'otro') {
-      <siaf-text-autocomplete [multiline]="true" label="Otro tipo de cálculo" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasFormula" [value]="formula()" (valueChange)="formula.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Otro tipo de cálculo" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasFormula()" [value]="formula()" (valueChange)="formula.set($event)" />
     } @else {
-      <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador" [value]="numerador()" (valueChange)="numerador.set($event)" />
-      <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador" [value]="denominador()" (valueChange)="denominador.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador()" [value]="numerador()" (valueChange)="numerador.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador()" [value]="denominador()" (valueChange)="denominador.set($event)" />
     }
   </div>
 
@@ -102,15 +102,15 @@
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Fuentes de información</h4>
     <siaf-input class="md:max-w-[520px]" label="Tipo de fuente de datos" type="select" placeholder="Seleccione" [required]="true" [options]="opcTipoFuente" [value]="tipoFuente()" (valueChange)="tipoFuente.set($any($event))" />
-    <siaf-text-autocomplete [multiline]="true" label="Fuente de datos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasFuente" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Fuente de datos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasFuente()" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
   </div>
 
   <!-- Consideraciones técnicas -->
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Consideraciones técnicas</h4>
-    <siaf-text-autocomplete [multiline]="true" label="Limitación" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasLimitacion" [value]="limitacion()" (valueChange)="limitacion.set($event)" />
-    <siaf-text-autocomplete [multiline]="true" label="Supuestos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasSupuestos" [value]="supuestos()" (valueChange)="supuestos.set($event)" />
-    <siaf-text-autocomplete [multiline]="true" label="Precisiones técnicas" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasPrecisiones" [value]="precisiones()" (valueChange)="precisiones.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Limitación" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasLimitacion()" [value]="limitacion()" (valueChange)="limitacion.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Supuestos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasSupuestos()" [value]="supuestos()" (valueChange)="supuestos.set($event)" />
+    <siaf-text-autocomplete [multiline]="true" label="Precisiones técnicas" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasPrecisiones()" [value]="precisiones()" (valueChange)="precisiones.set($event)" />
     <siaf-input class="md:max-w-[520px]" label="Periodicidad" type="select" placeholder="Seleccione" [required]="true" [options]="opcPeriodicidad" [value]="periodicidad()" (valueChange)="periodicidad.set($any($event))" />
   </div>
 
@@ -150,10 +150,10 @@
       @for (fila of variables(); track $index) {
         <div class="flex items-start gap-siaf-sm border-t border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm">
           <div class="grid min-w-0 flex-1 grid-cols-1 md:grid-cols-4 items-start gap-siaf-md">
-            <siaf-text-autocomplete placeholder="Variable" [suggestions]="sugDiccVariable" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $event)" (selected)="onVariableSeleccionada($index, $event)" />
-            <siaf-text-autocomplete placeholder="Descripción" [suggestions]="sugDiccDescripcion" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $event)" />
-            <siaf-text-autocomplete placeholder="Fuente" [suggestions]="sugDiccFuente" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $event)" />
-            <siaf-text-autocomplete placeholder="Tipo de variable" [suggestions]="sugDiccTipo" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $event)" />
+            <siaf-text-autocomplete placeholder="Variable" [suggestions]="sugDiccVariable()" [value]="fila.variable" (valueChange)="actualizarVariable($index, 'variable', $event)" (selected)="onVariableSeleccionada($index, $event)" />
+            <siaf-text-autocomplete placeholder="Descripción" [suggestions]="sugDiccDescripcion()" [value]="fila.descripcion" (valueChange)="actualizarVariable($index, 'descripcion', $event)" />
+            <siaf-text-autocomplete placeholder="Fuente" [suggestions]="sugDiccFuente()" [value]="fila.fuente" (valueChange)="actualizarVariable($index, 'fuente', $event)" />
+            <siaf-text-autocomplete placeholder="Tipo de variable" [suggestions]="sugDiccTipo()" [value]="fila.tipoVariable" (valueChange)="actualizarVariable($index, 'tipoVariable', $event)" />
           </div>
           <siaf-button class="mt-1 shrink-0" variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar variable" siafTooltip="Eliminar" (click)="eliminarVariable($index)" />
         </div>
@@ -172,8 +172,8 @@
       @for (fila of validaciones(); track $index) {
         <div class="flex items-start gap-siaf-sm border-t border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm">
           <div class="grid min-w-0 flex-1 grid-cols-1 md:grid-cols-2 items-start gap-siaf-md">
-            <siaf-text-autocomplete [multiline]="true" placeholder="Elemento" [suggestions]="sugValidElemento" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" (selected)="onElementoSeleccionado($index, $event)" />
-            <siaf-text-autocomplete [multiline]="true" placeholder="Descripción" [suggestions]="sugValidDescripcion" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
+            <siaf-text-autocomplete [multiline]="true" placeholder="Elemento" [suggestions]="sugValidElemento()" [value]="fila.elemento" (valueChange)="actualizarValidacion($index, 'elemento', $event)" (selected)="onElementoSeleccionado($index, $event)" />
+            <siaf-text-autocomplete [multiline]="true" placeholder="Descripción" [suggestions]="sugValidDescripcion()" [value]="fila.descripcion" (valueChange)="actualizarValidacion($index, 'descripcion', $event)" />
           </div>
           <siaf-button class="mt-1 shrink-0" variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar validación" siafTooltip="Eliminar" (click)="eliminarValidacion($index)" />
         </div>
