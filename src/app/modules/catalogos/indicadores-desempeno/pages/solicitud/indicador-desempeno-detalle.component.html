@@ -6,7 +6,7 @@
   <div class="flex flex-col gap-siaf-xs">
     <div class="flex min-h-10 items-center justify-between gap-siaf-md">
       <h4 class="m-0 text-sm font-bold text-text">Programa presupuestal <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
-      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar programa presupuestal" siafTooltip="Buscar" [disabled]="!!programa()" (click)="abrirModalPrograma()" />
+      <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar programa presupuestal" siafTooltip="Buscar" [disabled]="!!programa() || bloqueado()" (click)="abrirModalPrograma()" />
     </div>
     @if (programa(); as p) {
       <div class="flex items-start gap-siaf-md rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -14,7 +14,7 @@
           <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código programa</span><span class="text-sm font-bold text-text">{{ p.codigo }}</span></div>
           <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre programa</span><span class="text-sm font-bold text-text">{{ p.nombre }}</span></div>
         </div>
-        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar programa" (click)="limpiarPrograma()" />
+        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar programa" [disabled]="bloqueado()" (click)="limpiarPrograma()" />
       </div>
     } @else {
       <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -34,7 +34,7 @@
           <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código responsable</span><span class="text-sm font-bold text-text">{{ p.respCodigo }}</span></div>
           <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre responsable</span><span class="text-sm font-bold text-text">{{ p.respNombre }}</span></div>
         </div>
-        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar entidad responsable" (click)="limpiarPrograma()" />
+        <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar entidad responsable" [disabled]="bloqueado()" (click)="limpiarPrograma()" />
       </div>
     } @else {
       <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -50,18 +50,18 @@
     <h4 class="m-0 text-sm font-bold text-text">Indicador de desempeño</h4>
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-[220px_1fr]">
       <siaf-input label="Código" [required]="true" [disabled]="true" [value]="codigo()" />
-      <siaf-text-autocomplete label="Nombre" [required]="true" [suggestions]="nombresIndicador()" [value]="nombre()" (valueChange)="nombre.set($event)" />
+      <siaf-text-autocomplete label="Nombre" [required]="true" [disabled]="bloqueado()" [suggestions]="nombresIndicador()" [value]="nombre()" (valueChange)="nombre.set($event)" />
     </div>
   </div>
 
-  <siaf-radio-group label="Nivel de medición" name="nivel-medicion" [inline]="true" [required]="true" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
+  <siaf-radio-group label="Nivel de medición" name="nivel-medicion" [inline]="true" [required]="true" [disabled]="bloqueado()" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
 
   <!-- Producto: solo cuando el nivel de medición es «2. Producto» -->
   @if (nivelMedicion() === '2. Producto') {
     <div class="flex flex-col gap-siaf-xs">
       <div class="flex min-h-10 items-center justify-between gap-siaf-md">
         <h4 class="m-0 text-sm font-bold text-text">Producto <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
-        <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar producto" siafTooltip="Buscar" [disabled]="!!producto()" (click)="abrirModalProducto()" />
+        <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar producto" siafTooltip="Buscar" [disabled]="!!producto() || bloqueado()" (click)="abrirModalProducto()" />
       </div>
       @if (producto(); as pr) {
         <div class="flex items-start gap-siaf-md rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -69,7 +69,7 @@
             <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Código producto</span><span class="text-sm font-bold text-text">{{ pr.codigo }}</span></div>
             <div class="flex flex-col"><span class="text-[11px] font-medium uppercase tracking-[0.5px] text-text-muted">Nombre producto</span><span class="text-sm font-bold uppercase text-text">{{ pr.nombre }}</span></div>
           </div>
-          <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar producto" (click)="limpiarProducto()" />
+          <siaf-button variant="text" size="sm" icon="close" [iconOnly]="true" ariaLabel="Quitar producto" [disabled]="bloqueado()" (click)="limpiarProducto()" />
         </div>
       } @else {
         <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
@@ -80,29 +80,29 @@
   }
 
   <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
-    <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [options]="opcDimension" [value]="dimension()" (valueChange)="onDimensionChange($any($event))" />
-    <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [disabled]="!dimension()" [options]="opcUnidad()" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
+    <siaf-input label="Dimensión de desempeño" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado()" [options]="opcDimension" [value]="dimension()" (valueChange)="onDimensionChange($any($event))" />
+    <siaf-input label="Unidad de medida" type="select" placeholder="Seleccione" [required]="true" [disabled]="!dimension() || bloqueado()" [options]="opcUnidad()" [value]="unidadMedida()" (valueChange)="unidadMedida.set($any($event))" />
   </div>
 
-  <siaf-radio-group label="Sentido del indicador" name="sentido" [inline]="true" [required]="true" [options]="opcSentido" [value]="sentido()" (valueChange)="sentido.set($event)" />
+  <siaf-radio-group label="Sentido del indicador" name="sentido" [inline]="true" [required]="true" [disabled]="bloqueado()" [options]="opcSentido" [value]="sentido()" (valueChange)="sentido.set($event)" />
 
   <!-- Método de cálculo -->
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Método de cálculo</h4>
-    <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
+    <siaf-radio-group label="Tipo de cálculo" name="tipo-calculo" [inline]="true" [required]="true" [disabled]="bloqueado()" [options]="opcTipoCalculo" [value]="tipoCalculo()" (valueChange)="tipoCalculo.set($event)" />
     @if (tipoCalculo() === 'otro') {
-      <siaf-text-autocomplete [multiline]="true" label="Otro tipo de cálculo" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasFormula()" [value]="formula()" (valueChange)="formula.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Otro tipo de cálculo" [required]="true" [disabled]="bloqueado()" [maxlength]="4000" [suggestions]="sugerenciasFormula()" [value]="formula()" (valueChange)="formula.set($event)" />
     } @else {
-      <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [maxlength]="4000" [suggestions]="sugerenciasNumerador()" [value]="numerador()" (valueChange)="numerador.set($event)" />
-      <siaf-text-autocomplete [multiline]="true" label="Denominador" [maxlength]="4000" [suggestions]="sugerenciasDenominador()" [value]="denominador()" (valueChange)="denominador.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Numerador" [required]="true" [disabled]="bloqueado()" [maxlength]="4000" [suggestions]="sugerenciasNumerador()" [value]="numerador()" (valueChange)="numerador.set($event)" />
+      <siaf-text-autocomplete [multiline]="true" label="Denominador" [disabled]="bloqueado()" [maxlength]="4000" [suggestions]="sugerenciasDenominador()" [value]="denominador()" (valueChange)="denominador.set($event)" />
     }
   </div>
 
   <!-- Fuentes de información -->
   <div class="flex flex-col gap-siaf-md">
     <h4 class="m-0 text-sm font-bold text-text">Fuentes de información</h4>
-    <siaf-input class="md:max-w-[520px]" label="Tipo de fuente de datos" type="select" placeholder="Seleccione" [required]="true" [options]="opcTipoFuente" [value]="tipoFuente()" (valueChange)="tipoFuente.set($any($event))" />
-    <siaf-text-autocomplete [multiline]="true" label="Fuente de datos" [required]="true" [maxlength]="1000" [suggestions]="sugerenciasFuente()" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
+    <siaf-input class="md:max-w-[520px]" label="Tipo de fuente de datos" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado()" [options]="opcTipoFuente" [value]="tipoFuente()" (valueChange)="tipoFuente.set($any($event))" />
+    <siaf-text-autocomplete [multiline]="true" label="Fuente de datos" [required]="true" [disabled]="bloqueado()" [maxlength]="1000" [suggestions]="sugerenciasFuente()" [value]="fuenteDatos()" (valueChange)="fuenteDatos.set($event)" />
   </div>
 
   <!-- Consideraciones técnicas -->
@@ -116,8 +116,18 @@
 
   <!-- ── COBERTURA DE MEDICIÓN ── -->
   <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Cobertura de medición</h3>
-  <siaf-radio-group label="Alcance geográfico" name="alcance" [inline]="true" [required]="true" [options]="opcAlcance" [value]="alcanceGeografico()" (valueChange)="alcanceGeografico.set($event)" />
-  <siaf-input class="md:max-w-[520px]" label="Nivel responsable del registro" type="select" placeholder="Seleccione" [required]="true" [options]="opcNivelResponsable" [value]="nivelResponsable()" (valueChange)="nivelResponsable.set($any($event))" />
+  <div class="flex flex-col gap-siaf-xs">
+    <span class="text-sm font-medium text-text">Alcance geográfico <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></span>
+    <div class="flex flex-wrap gap-siaf-lg">
+      @for (opcion of opcionesAlcance; track opcion) {
+        <label class="flex cursor-pointer items-center gap-siaf-sm text-sm text-text">
+          <input type="checkbox" class="size-5" [checked]="alcanceMarcado(opcion)" [disabled]="bloqueado()" (change)="alternarAlcance(opcion, $any($event.target).checked)" />
+          {{ opcion }}
+        </label>
+      }
+    </div>
+  </div>
+  <siaf-input class="md:max-w-[520px]" label="Nivel responsable del registro" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado()" [options]="opcNivelResponsable" [value]="nivelResponsable()" (valueChange)="nivelResponsable.set($any($event))" />
 
   <!-- ── DESAGREGACIÓN GEOGRÁFICA ── -->
   <div class="flex flex-col gap-siaf-sm">

@@ -106,7 +106,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               }
 
               @if (editandoIndicador()) {
-                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
+                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" [modoModificacion]="true" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
               } @else if (indicadoresModificar().length) {
                 <div class="flex flex-col gap-siaf-md">
                   <!-- Buscador de la tabla + filtro y más opciones. -->

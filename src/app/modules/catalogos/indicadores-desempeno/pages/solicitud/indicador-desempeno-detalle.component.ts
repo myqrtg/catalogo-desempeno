@@ -234,6 +234,34 @@ export class IndicadorDesempenoDetalleComponent {
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
   /** Pre-carga el formulario con los datos de un indicador (para modificar). */
   @Input() set prefill(ind: IndicadorDemo | null) { if (ind) this.cargarDesde(ind); }
+  /** Modo modificación: solo se editan ciertos campos y «Aceptar» se habilita tras un cambio real. */
+  @Input() set modoModificacion(v: boolean) { this._modoModificacion.set(v); }
+
+  /** En modo modificación, los campos no editables quedan bloqueados. */
+  private readonly _modoModificacion = signal(false);
+  readonly bloqueado = computed(() => this._modoModificacion());
+  private readonly snapshotMod = signal('');
+
+  /** Foto de los campos editables en modificación (para saber si hubo cambios). */
+  private readonly estadoModificables = computed(() => JSON.stringify({
+    limitacion: this.limitacion(),
+    supuestos: this.supuestos(),
+    precisiones: this.precisiones(),
+    periodicidad: this.periodicidad(),
+    desagregaciones: this.desagregaciones(),
+    variables: this.variables(),
+    validaciones: this.validaciones(),
+    codigoComentado: this.nombreArchivo(this.codigoComentado()),
+    sustento: this.nombreArchivo(this.sustento()),
+    programacion: this.programacion(),
+    gestion: this.gestion(),
+    evaluacion: this.evaluacion(),
+  }));
+  readonly huboCambio = computed(() => this.estadoModificables() !== this.snapshotMod());
+
+  private nombreArchivo(f: UploadedFileInfo | null): string {
+    return f ? f.name : '';
+  }
 
   // ── Selección de programa y entidad ───────────────────────────────
   readonly programa = signal<ProgramaPresupuestal | null>(null);
@@ -274,7 +302,23 @@ export class IndicadorDesempenoDetalleComponent {
   readonly periodicidad = signal('');
 
   // ── Cobertura de medición ─────────────────────────────────────────
-  readonly alcanceGeografico = signal('');
+  // Alcance geográfico: casillas combinables (Nacional, Regional, Local). El valor es la unión elegida.
+  private readonly ordenAlcance = ['Nacional', 'Regional', 'Local'];
+  readonly opcionesAlcance = this.ordenAlcance;
+  readonly alcanceSel = signal<Set<string>>(new Set());
+  readonly alcanceGeografico = computed(() => this.ordenAlcance.filter((o) => this.alcanceSel().has(o)).join(', '));
+
+  alcanceMarcado(opcion: string): boolean {
+    return this.alcanceSel().has(opcion);
+  }
+
+  alternarAlcance(opcion: string, marcado: boolean): void {
+    this.alcanceSel.update((s) => {
+      const next = new Set(s);
+      if (marcado) next.add(opcion); else next.delete(opcion);
+      return next;
+    });
+  }
   readonly nivelResponsable = signal('');
 
   // ── Tablas dinámicas ──────────────────────────────────────────────
@@ -312,11 +356,6 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcTipoCalculo = [
     { label: 'Numerador/denominador*100', value: 'numerador' },
     { label: 'Otro tipo de cálculo', value: 'otro' },
-  ];
-  readonly opcAlcance = [
-    { label: 'Nacional', value: 'Nacional' },
-    { label: 'Nacional y Regional', value: 'Nacional y Regional' },
-    { label: 'Nacional, Regional y Local', value: 'Nacional, Regional y Local' },
   ];
   readonly opcSiNo = [
     { label: 'Sí', value: 'SI' },
@@ -387,6 +426,8 @@ export class IndicadorDesempenoDetalleComponent {
     const desagregacionOk = this.desagregaciones().some((f) => req(f.ambito));
     const diccionarioOk = this.variables().some((f) => req(f.variable) && req(f.descripcion) && req(f.fuente) && req(f.tipoVariable));
     const validacionesOk = this.validaciones().some((f) => req(f.elemento) && req(f.descripcion));
+    // En modificación, además de estar completo, debe haber un cambio real respecto de lo precargado.
+    if (this.bloqueado() && !this.huboCambio()) return false;
     return (
       !!this.programa() && productoOk
       && req(this.nombre())
@@ -570,7 +611,7 @@ export class IndicadorDesempenoDetalleComponent {
     this.supuestos.set(ind.supuestos);
     this.precisiones.set(ind.precisiones);
     this.periodicidad.set(ind.periodicidad);
-    this.alcanceGeografico.set(ind.alcance);
+    this.alcanceSel.set(new Set(this.ordenAlcance.filter((o) => new RegExp(`\\b${o}\\b`).test(ind.alcance))));
     this.nivelResponsable.set(ind.nivelResponsable);
     this.programacion.set(ind.programacion);
     this.gestion.set(ind.gestion);
@@ -585,6 +626,8 @@ export class IndicadorDesempenoDetalleComponent {
     this.validaciones.set(ind.validaciones.length ? ind.validaciones.map((v) => ({ ...v })) : [{ elemento: '', descripcion: '' }]);
     this.codigoComentado.set({ name: 'Código comentado.pdf', size: 500 * 1024 });
     this.sustento.set({ name: 'Sustento.pdf', size: 500 * 1024 });
+    // Foto de los campos editables: «Aceptar» se habilita solo cuando algo cambie respecto de esta.
+    this.snapshotMod.set(this.estadoModificables());
   }
 
   // ── Archivos ──────────────────────────────────────────────────────

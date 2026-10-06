@@ -20,6 +20,7 @@ import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-con
           [placeholder]="label || placeholder"
           [required]="required"
           [maxlength]="maxlength"
+          [disabled]="disabled"
           [value]="valor()"
           (valueChange)="onInput($event)"
         />
@@ -28,6 +29,7 @@ import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-con
           [label]="label"
           [placeholder]="placeholder"
           [required]="required"
+          [disabled]="disabled"
           [value]="valor()"
           autocomplete="off"
           (valueChange)="onInput($any($event))"
@@ -71,6 +73,7 @@ export class TextAutocompleteComponent {
   /** Usa un área de texto en vez de un input de una línea. */
   @Input() multiline = false;
   @Input() maxlength = 500;
+  @Input() disabled = false;
 
   @Output() valueChange = new EventEmitter<string>();
   /** Se emite solo cuando el usuario elige una sugerencia (no al escribir texto libre). */
