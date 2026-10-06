@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, comput
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { FocoDirective } from '../../../../../shared/ui/foco/foco.directive';
+import { IconComponent } from '../../../../../shared/ui/icon/icon.component';
 
 export interface CatalogColumn {
   key: string;
@@ -17,13 +18,14 @@ export interface CatalogRow {
 }
 
 /**
- * Modal centrado para seleccionar un registro de un catálogo (radio único), con buscador, tabla, paginación y
- * Cancelar/Aceptar. Es la variante «diálogo» del diseño (frente al panel lateral `siaf-selection-side-nav`).
+ * Modal centrado para seleccionar registros de un catálogo, con buscador, tabla, paginación y Cancelar/Aceptar. Por
+ * defecto es radio único (`accepted`); con `[multiple]` usa casillas y emite varios ids (`acceptedMultiple`). Es la
+ * variante «diálogo» del diseño (frente al panel lateral `siaf-selection-side-nav`).
  */
 @Component({
   selector: 'siaf-catalog-selection-modal',
   standalone: true,
-  imports: [NgClass, ButtonComponent, TextFieldComponent, FocoDirective],
+  imports: [NgClass, ButtonComponent, TextFieldComponent, FocoDirective, IconComponent],
   template: `
     @if (open) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-[color:rgba(0,0,0,0.5)] p-siaf-md" (click)="cerrar()">
@@ -60,11 +62,18 @@ export interface CatalogRow {
                 @for (fila of filasPagina(); track fila.id) {
                   <tr
                     class="cursor-pointer border-b border-[var(--sys-color-divider-default)] transition hover:bg-[var(--sys-color-bg-states-light-hover)]"
-                    [class.bg-[var(--sys-color-bg-states-light-selected)]]="seleccion() === fila.id"
-                    (click)="seleccion.set(fila.id)"
+                    [class.bg-[var(--sys-color-bg-states-light-selected)]]="estaSeleccionada(fila.id)"
+                    (click)="alternar(fila.id)"
                   >
                     <td class="px-siaf-md py-siaf-sm">
-                      <input type="radio" name="catalog-selection" [checked]="seleccion() === fila.id" (change)="seleccion.set(fila.id)" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
+                      @if (multiple) {
+                        <div class="flex items-center gap-siaf-sm">
+                          <input type="checkbox" class="size-5" [checked]="estaSeleccionada(fila.id)" (change)="alternar(fila.id)" (click)="$event.stopPropagation()" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
+                          <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
+                        </div>
+                      } @else {
+                        <input type="radio" name="catalog-selection" [checked]="estaSeleccionada(fila.id)" (change)="alternar(fila.id)" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
+                      }
                     </td>
                     @for (col of columns; track col.key) {
                       <td class="px-siaf-md py-siaf-sm text-text" [ngClass]="col.widthClass">{{ fila[col.key] }}</td>
@@ -77,17 +86,20 @@ export interface CatalogRow {
             </table>
           </div>
 
-          <div class="flex items-center justify-end gap-siaf-lg px-siaf-lg py-siaf-md text-sm text-[var(--sys-color-text-neutral-medium)]">
-            <span>{{ rangoTexto() }}</span>
-            <div class="flex items-center gap-siaf-xs">
-              <siaf-button variant="text" size="sm" icon="chevron_left" [iconOnly]="true" ariaLabel="Página anterior" [disabled]="pagina() === 1" (click)="anterior()" />
-              <siaf-button variant="text" size="sm" icon="chevron_right" [iconOnly]="true" ariaLabel="Página siguiente" [disabled]="pagina() >= totalPaginas()" (click)="siguiente()" />
+          <div class="flex items-center justify-between gap-siaf-lg px-siaf-lg py-siaf-md text-sm text-[var(--sys-color-text-neutral-medium)]">
+            <span>Filas por página: {{ pageSize }}</span>
+            <div class="flex items-center gap-siaf-lg">
+              <span>{{ rangoTexto() }}</span>
+              <div class="flex items-center gap-siaf-xs">
+                <siaf-button variant="text" size="sm" icon="chevron_left" [iconOnly]="true" ariaLabel="Página anterior" [disabled]="pagina() === 1" (click)="anterior()" />
+                <siaf-button variant="text" size="sm" icon="chevron_right" [iconOnly]="true" ariaLabel="Página siguiente" [disabled]="pagina() >= totalPaginas()" (click)="siguiente()" />
+              </div>
             </div>
           </div>
 
           <footer class="flex items-center justify-end gap-siaf-sm border-t border-[var(--sys-color-divider-default)] px-siaf-lg py-siaf-md">
             <siaf-button variant="secondary" size="md" (click)="cerrar()">Cancelar</siaf-button>
-            <siaf-button variant="accent" size="md" [disabled]="!seleccion()" (click)="aceptar()">Aceptar</siaf-button>
+            <siaf-button variant="accent" size="md" [disabled]="!haySeleccion()" (click)="aceptar()">Aceptar</siaf-button>
           </footer>
         </div>
       </div>
@@ -100,16 +112,41 @@ export class CatalogSelectionModalComponent {
   @Input() title = 'Seleccionar';
   @Input() columns: CatalogColumn[] = [];
   @Input() set rows(value: CatalogRow[]) { this._rows.set(value ?? []); }
-  @Input() set selectedId(value: string | null) { this.seleccion.set(value ?? ''); }
+  @Input() set selectedId(value: string | null) { this.seleccionados.set(value ? new Set([value]) : new Set()); }
+  @Input() set selectedIds(value: string[]) { this.seleccionados.set(new Set(value ?? [])); }
   @Input() pageSize = 10;
+  /** Con `multiple`, la selección es por casillas (varios registros); si no, radio único. */
+  @Input() multiple = false;
 
   @Output() closed = new EventEmitter<void>();
   @Output() accepted = new EventEmitter<string>();
+  @Output() acceptedMultiple = new EventEmitter<string[]>();
 
   private readonly _rows = signal<CatalogRow[]>([]);
-  readonly seleccion = signal('');
+  readonly seleccionados = signal<Set<string>>(new Set());
   readonly busqueda = signal('');
   readonly pagina = signal(1);
+
+  estaSeleccionada(id: string): boolean {
+    return this.seleccionados().has(id);
+  }
+
+  haySeleccion(): boolean {
+    return this.seleccionados().size > 0;
+  }
+
+  /** Alterna la casilla (multi) o fija la selección única (radio). */
+  alternar(id: string): void {
+    if (this.multiple) {
+      this.seleccionados.update((s) => {
+        const next = new Set(s);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        return next;
+      });
+    } else {
+      this.seleccionados.set(new Set([id]));
+    }
+  }
 
   private readonly filtradas = computed(() => {
     const q = this.normalizar(this.busqueda());
@@ -145,7 +182,10 @@ export class CatalogSelectionModalComponent {
   }
 
   aceptar(): void {
-    if (this.seleccion()) this.accepted.emit(this.seleccion());
+    const ids = [...this.seleccionados()];
+    if (!ids.length) return;
+    if (this.multiple) this.acceptedMultiple.emit(ids);
+    else this.accepted.emit(ids[0]);
   }
 
   private normalizar(v: string): string {
