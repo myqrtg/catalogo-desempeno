@@ -9,6 +9,7 @@ import { ActionTrackerComponent, ActionTrackerSummary } from '../../../../../sha
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
 import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status-tag.component';
+import { IconComponent } from '../../../../../shared/ui/icon/icon.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
@@ -16,6 +17,8 @@ import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.direc
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
 import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './indicador-desempeno-detalle.component';
 import { IndicadorDesempenoDetalleVistaComponent } from './indicador-desempeno-detalle-vista.component';
+import { CatalogColumn, CatalogRow, CatalogSelectionModalComponent } from './catalog-selection-modal.component';
+import { INDICADORES_DEMO, IndicadorDemo } from './indicadores-demo';
 
 /** Registro de indicador ya agregado a la solicitud (fila de la tabla). */
 interface IndicadorRegistrado extends IndicadorDetalleResumen {
@@ -38,8 +41,10 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     ActionTrackerComponent,
     DocumentSummaryCardComponent,
     ButtonComponent,
+    IconComponent,
     ModalComponent,
     TextFieldComponent,
+    CatalogSelectionModalComponent,
     SnackbarComponent,
     TooltipDirective,
     IndicadorDesempenoDetalleComponent,
@@ -90,13 +95,65 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           @if (tipoModificacion() === 'atributos') {
             <siaf-solicitude-form-card title="Modificación de indicador de desempeño">
               <div card-actions class="flex items-center gap-siaf-sm">
-                <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar" siafTooltip="Buscar" (click)="modalBuscarIndicador.set(true)" />
+                <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" [disabled]="indicadoresModificar().length > 0" ariaLabel="Buscar" siafTooltip="Buscar" (click)="modalBuscarIndicador.set(true)" />
               </div>
-              <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
-                <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">
-                  No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.
-                </p>
-              </div>
+              @if (indicadoresModificar().length) {
+                <div class="flex flex-col gap-siaf-md">
+                  <!-- Buscador de la tabla + filtro y más opciones. -->
+                  <div class="flex items-center gap-siaf-md">
+                    <siaf-input class="block w-full" label="Buscar" trailingIcon="search" [value]="busquedaMod()" (valueChange)="busquedaMod.set($any($event))" />
+                    <siaf-button variant="text" size="md" icon="filter_list" [iconOnly]="true" ariaLabel="Filtros" />
+                    <siaf-button variant="text" size="md" icon="more_vert" [iconOnly]="true" ariaLabel="Más opciones" />
+                  </div>
+
+                  <div class="flex items-center gap-siaf-sm">
+                    <input type="checkbox" class="size-5" [checked]="todosModSeleccionados()" (change)="alternarTodosMod($any($event.target).checked)" aria-label="Seleccionar todos los indicadores" />
+                  </div>
+
+                  <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+                    <table class="w-full min-w-[760px] border-collapse text-sm">
+                      <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+                        <tr>
+                          <th class="w-20 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm"></th>
+                          <th class="w-[140px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Código indicador</th>
+                          <th class="border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nombre indicador</th>
+                          <th class="w-[180px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nivel de medición</th>
+                          <th class="w-[200px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Dimensión de desempeño</th>
+                        </tr>
+                      </thead>
+                      <tbody class="text-text">
+                        @for (ind of indicadoresModificarFiltrados(); track ind.codigo) {
+                          <tr class="border-b border-[var(--sys-color-divider-default)]">
+                            <td class="px-siaf-md py-siaf-sm">
+                              <div class="flex items-center gap-siaf-sm">
+                                <input type="checkbox" class="size-5" [checked]="modSeleccionados().has(ind.codigo)" (change)="alternarUnoMod(ind.codigo, $any($event.target).checked)" [attr.aria-label]="'Seleccionar ' + ind.nombre" />
+                                <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
+                              </div>
+                            </td>
+                            <td class="px-siaf-md py-siaf-sm font-bold">{{ ind.codigo }}</td>
+                            <td class="px-siaf-md py-siaf-sm">{{ ind.nombre }}</td>
+                            <td class="px-siaf-md py-siaf-sm">{{ ind.nivelMedicion }}</td>
+                            <td class="px-siaf-md py-siaf-sm">{{ dimensionLabelDe(ind) }}</td>
+                          </tr>
+                        } @empty {
+                          <tr><td colspan="5" class="px-siaf-md py-siaf-lg text-center text-[var(--sys-color-text-neutral-medium)]">No se encontraron resultados.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="flex items-center justify-end gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
+                    <span>Filas por página: {{ indicadoresModificar().length }}</span>
+                    <span>1-{{ indicadoresModificarFiltrados().length }} de {{ indicadoresModificarFiltrados().length }}</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+                  <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">
+                    No se ha seleccionado ninguna opción. Haga clic en el botón para realizar una selección.
+                  </p>
+                </div>
+              }
             </siaf-solicitude-form-card>
           }
         } @else {
@@ -195,6 +252,19 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         }
       </siaf-solicitude-page-layout>
 
+      <!-- Búsqueda del indicador a modificar (datos reales del taller). -->
+      <siaf-catalog-selection-modal
+        [open]="modalBuscarIndicador()"
+        title="Seleccionar registro"
+        [multiple]="true"
+        [pageSize]="25"
+        [columns]="columnasIndicador"
+        [rows]="filasIndicador"
+        [selectedIds]="idsModificar()"
+        (acceptedMultiple)="onIndicadoresModificarAceptado($event)"
+        (closed)="modalBuscarIndicador.set(false)"
+      />
+
       <!-- Confirmación de grabado del documento. -->
       <siaf-modal
         [open]="modalGrabar()"
@@ -285,6 +355,38 @@ export class IndicadorDesempenoRequestComponent {
   // Modificación: tipo (Atributos / Año fin de medición), elegido a mano.
   readonly tipoModificacion = signal('');
   readonly modalBuscarIndicador = signal(false);
+  readonly indicadoresModificar = signal<IndicadorDemo[]>([]);
+  readonly idsModificar = computed(() => this.indicadoresModificar().map((i) => i.codigo));
+  readonly busquedaMod = signal('');
+  readonly modSeleccionados = signal<Set<string>>(new Set());
+
+  readonly indicadoresModificarFiltrados = computed<IndicadorDemo[]>(() => {
+    const q = this.busquedaMod().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    const lista = this.indicadoresModificar();
+    if (!q) return lista;
+    return lista.filter((i) =>
+      [i.codigo, i.nombre, i.nivelMedicion, this.dimensionLabelDe(i)]
+        .some((v) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes(q)),
+    );
+  });
+
+  // Modal de búsqueda de indicador (datos reales del taller, del Excel).
+  private readonly dimensionLabel: Record<string, string> = {
+    eficacia: '1. Eficacia', eficiencia: '2. Eficiencia', calidad: '3. Calidad', economia: '4. Economía',
+  };
+  readonly columnasIndicador: CatalogColumn[] = [
+    { key: 'codigo', label: 'Código indicador', widthClass: 'w-[140px]' },
+    { key: 'nombre', label: 'Nombre indicador' },
+    { key: 'nivelMedicion', label: 'Nivel de medición', widthClass: 'w-[180px]' },
+    { key: 'dimension', label: 'Dimensión de desempeño', widthClass: 'w-[200px]' },
+  ];
+  readonly filasIndicador: CatalogRow[] = INDICADORES_DEMO.map((i) => ({
+    id: i.codigo,
+    codigo: i.codigo,
+    nombre: i.nombre,
+    nivelMedicion: i.nivelMedicion,
+    dimension: this.dimensionLabel[i.dimension] ?? i.dimension,
+  }));
   readonly opcTipoModificacion = [
     { label: 'Atributos', value: 'atributos' },
     { label: 'Año fin de medición', value: 'anio-fin' },
@@ -345,6 +447,36 @@ export class IndicadorDesempenoRequestComponent {
   /** Abre la pantalla de detalle de solo lectura del indicador seleccionado. */
   verDetalle(registro: IndicadorRegistrado): void {
     this.detalleVisto.set(registro);
+  }
+
+  /** Etiqueta de la dimensión de un indicador de ejemplo. */
+  dimensionLabelDe(ind: IndicadorDemo): string {
+    return this.dimensionLabel[ind.dimension] ?? ind.dimension;
+  }
+
+  /** Al aceptar la búsqueda, guarda los indicadores a modificar y cierra el modal. */
+  onIndicadoresModificarAceptado(codigos: string[]): void {
+    this.indicadoresModificar.set(INDICADORES_DEMO.filter((i) => codigos.includes(i.codigo)));
+    this.modSeleccionados.set(new Set());
+    this.busquedaMod.set('');
+    this.modalBuscarIndicador.set(false);
+  }
+
+  todosModSeleccionados(): boolean {
+    const total = this.indicadoresModificarFiltrados().length;
+    return total > 0 && this.indicadoresModificarFiltrados().every((i) => this.modSeleccionados().has(i.codigo));
+  }
+
+  alternarTodosMod(marcado: boolean): void {
+    this.modSeleccionados.set(marcado ? new Set(this.indicadoresModificarFiltrados().map((i) => i.codigo)) : new Set());
+  }
+
+  alternarUnoMod(codigo: string, marcado: boolean): void {
+    this.modSeleccionados.update((s) => {
+      const next = new Set(s);
+      if (marcado) next.add(codigo); else next.delete(codigo);
+      return next;
+    });
   }
 
   abrirForm(): void {
