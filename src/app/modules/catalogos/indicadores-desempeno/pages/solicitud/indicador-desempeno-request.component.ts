@@ -92,7 +92,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             />
           </siaf-solicitude-form-card>
 
-          @if (tipoModificacion() === 'atributos') {
+          @if (tipoModificacion()) {
             <siaf-solicitude-form-card title="Modificación de indicador de desempeño">
               @if (editandoIndicador()) {
                 <div card-actions class="flex items-center gap-siaf-sm">
@@ -106,7 +106,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               }
 
               @if (editandoIndicador()) {
-                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" [modoModificacion]="true" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
+                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" [modo]="tipoModificacion() === 'anio-fin' ? 'anio-fin' : 'atributos'" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
               } @else if (indicadoresModificar().length) {
                 <div class="flex flex-col gap-siaf-md">
                   <!-- Buscador de la tabla + filtro y más opciones. -->

@@ -116,6 +116,9 @@ const SUG_VALID_DESCRIPCION: string[] = [
   'El parto institucional requiere simultáneamente establecimiento de salud y atención por personal de salud.',
 ];
 
+/** Modo del formulario DETALLE: creación o modificación (por atributos o por año de fin de medición). */
+export type FormularioModo = 'creacion' | 'atributos' | 'anio-fin';
+
 export interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
 export interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
 export interface FilaValidacion { elemento: string; descripcion: string; }
@@ -234,13 +237,26 @@ export class IndicadorDesempenoDetalleComponent {
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
   /** Pre-carga el formulario con los datos de un indicador (para modificar). */
   @Input() set prefill(ind: IndicadorDemo | null) { if (ind) this.cargarDesde(ind); }
-  /** Modo modificación: solo se editan ciertos campos y «Aceptar» se habilita tras un cambio real. */
-  @Input() set modoModificacion(v: boolean) { this._modoModificacion.set(v); }
+  /** Modo del formulario: creación (todo editable), o modificación por «atributos» / «anio-fin» (campos limitados). */
+  @Input() set modo(m: FormularioModo) { this._modo.set(m); }
 
-  /** En modo modificación, los campos no editables quedan bloqueados. */
-  private readonly _modoModificacion = signal(false);
-  readonly bloqueado = computed(() => this._modoModificacion());
+  private readonly _modo = signal<FormularioModo>('creacion');
+  readonly esModificacion = computed(() => this._modo() !== 'creacion');
   private readonly snapshotMod = signal('');
+
+  // Campos editables en cada tipo de modificación; el resto queda bloqueado.
+  private readonly editablesAtributos = new Set([
+    'limitacion', 'supuestos', 'precisiones', 'periodicidad', 'desagregacion', 'diccionario',
+    'validaciones', 'codigoComentado', 'sustento', 'programacion', 'gestion', 'evaluacion',
+  ]);
+
+  /** ¿El campo está bloqueado según el modo? En creación nunca; en año-fin solo «anioFin» y «sustento» quedan libres. */
+  bloqueado(campo: string): boolean {
+    const m = this._modo();
+    if (m === 'creacion') return false;
+    if (m === 'anio-fin') return campo !== 'anioFin' && campo !== 'sustento';
+    return !this.editablesAtributos.has(campo);
+  }
 
   /** Foto de los campos editables en modificación (para saber si hubo cambios). */
   private readonly estadoModificables = computed(() => JSON.stringify({
@@ -256,6 +272,7 @@ export class IndicadorDesempenoDetalleComponent {
     programacion: this.programacion(),
     gestion: this.gestion(),
     evaluacion: this.evaluacion(),
+    anioFin: this.anioFinMedicion(),
   }));
   readonly huboCambio = computed(() => this.estadoModificables() !== this.snapshotMod());
 
@@ -427,7 +444,7 @@ export class IndicadorDesempenoDetalleComponent {
     const diccionarioOk = this.variables().some((f) => req(f.variable) && req(f.descripcion) && req(f.fuente) && req(f.tipoVariable));
     const validacionesOk = this.validaciones().some((f) => req(f.elemento) && req(f.descripcion));
     // En modificación, además de estar completo, debe haber un cambio real respecto de lo precargado.
-    if (this.bloqueado() && !this.huboCambio()) return false;
+    if (this.esModificacion() && !this.huboCambio()) return false;
     return (
       !!this.programa() && productoOk
       && req(this.nombre())
