@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, computed, effect, signal } from '@angular/core';
 
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
@@ -235,6 +235,12 @@ const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
 export class IndicadorDesempenoDetalleComponent {
   @Output() canceled = new EventEmitter<void>();
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
+  /** Emite si «Aceptar» debe estar habilitado; el padre lo usa para el botón proyectado (evita problemas de timing). */
+  @Output() habilitadoChange = new EventEmitter<boolean>();
+
+  constructor() {
+    effect(() => this.habilitadoChange.emit(this.aceptarHabilitado()));
+  }
   /** Pre-carga el formulario con los datos de un indicador (para modificar). */
   @Input() set prefill(ind: IndicadorDemo | null) { if (ind) this.cargarDesde(ind); }
   /** Modo del formulario: creación (todo editable), o modificación por «atributos» / «anio-fin» (campos limitados). */
@@ -438,13 +444,13 @@ export class IndicadorDesempenoDetalleComponent {
    * El Código y Medición/Vigencia se asignan al aceptar (no bloquean); Denominador y Área/Periodicidad son opcionales.
    */
   readonly aceptarHabilitado = computed<boolean>(() => {
+    // En modificación, el documento ya era válido: «Aceptar» se habilita en cuanto hay un cambio real.
+    if (this.esModificacion()) return this.huboCambio();
     const req = (v: string) => !!v && v.trim().length > 0;
     const productoOk = this.nivelMedicion() === '2. Producto' ? !!this.producto() : true;
     const desagregacionOk = this.desagregaciones().some((f) => req(f.ambito));
     const diccionarioOk = this.variables().some((f) => req(f.variable) && req(f.descripcion) && req(f.fuente) && req(f.tipoVariable));
     const validacionesOk = this.validaciones().some((f) => req(f.elemento) && req(f.descripcion));
-    // En modificación, además de estar completo, debe haber un cambio real respecto de lo precargado.
-    if (this.esModificacion() && !this.huboCambio()) return false;
     return (
       !!this.programa() && productoOk
       && req(this.nombre())

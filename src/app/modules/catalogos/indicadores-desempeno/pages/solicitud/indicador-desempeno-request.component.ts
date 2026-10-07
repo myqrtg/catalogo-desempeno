@@ -64,14 +64,14 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
         [saveDisabled]="esModificacion() ? !modCambiosGuardados() : (mostrandoForm() || registros().length === 0)"
-        [verifyDisabled]="esModificacion() || !elaborado()"
+        [verifyDisabled]="!elaborado()"
         (returned)="regresar()"
         (canceled)="regresar()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
         (verified)="modalVerificar.set(true)"
       >
-        @if (grabado() && !esModificacion()) {
+        @if (grabado()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
             <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
             <siaf-document-summary-card [documentNumber]="numeroDocumento" [status]="estadoDocumento()" />
@@ -86,6 +86,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               class="block md:max-w-[360px]"
               type="select"
               placeholder="Tipo de modificación"
+              [disabled]="grabado()"
               [options]="opcTipoModificacion"
               [value]="tipoModificacion()"
               (valueChange)="tipoModificacion.set($any($event))"
@@ -97,7 +98,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               @if (editandoIndicador()) {
                 <div card-actions class="flex items-center gap-siaf-sm">
                   <siaf-button variant="secondary" size="md" (click)="cancelarEdicionMod()">Cancelar</siaf-button>
-                  <siaf-button variant="accent" size="md" [disabled]="!detalle()?.aceptarHabilitado()" (click)="aceptarEdicionMod()">Aceptar</siaf-button>
+                  <siaf-button variant="accent" size="md" [disabled]="!detalleHabilitado()" (click)="aceptarEdicionMod()">Aceptar</siaf-button>
                 </div>
               } @else {
                 <div card-actions class="flex items-center gap-siaf-sm">
@@ -106,7 +107,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               }
 
               @if (editandoIndicador()) {
-                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" [modo]="tipoModificacion() === 'anio-fin' ? 'anio-fin' : 'atributos'" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
+                <siaf-indicador-desempeno-detalle [prefill]="editandoIndicador()" [modo]="tipoModificacion() === 'anio-fin' ? 'anio-fin' : 'atributos'" (habilitadoChange)="detalleHabilitado.set($event)" (canceled)="cancelarEdicionMod()" (saved)="aceptarEdicionMod()" />
               } @else if (indicadoresModificar().length) {
                 <div class="flex flex-col gap-siaf-md">
                   <!-- Buscador de la tabla + filtro y más opciones. -->
@@ -118,7 +119,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 
                   <div class="flex items-center gap-siaf-sm">
                     <input type="checkbox" class="size-5" [checked]="todosModSeleccionados()" (change)="alternarTodosMod($any($event.target).checked)" aria-label="Seleccionar todos los indicadores" />
-                    @if (modSeleccionados().size > 0) {
+                    @if (modSeleccionados().size > 0 && !grabado()) {
                       <siaf-button variant="text" size="md" icon="edit" [iconOnly]="true" ariaLabel="Editar" siafTooltip="Editar" (click)="editarSeleccionadoMod()" />
                       <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="eliminarSeleccionadosMod()" />
                     }
@@ -156,7 +157,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                     </table>
                   </div>
 
-                  <div class="flex items-center justify-end gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
+                  <div class="flex items-center justify-between gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
                     <span>Filas por página: {{ indicadoresModificar().length }}</span>
                     <span>1-{{ indicadoresModificarFiltrados().length }} de {{ indicadoresModificarFiltrados().length }}</span>
                   </div>
@@ -175,14 +176,14 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           <div card-actions class="flex items-center gap-siaf-sm">
             @if (mostrandoForm()) {
               <siaf-button variant="secondary" size="md" (click)="cancelarForm()">Cancelar</siaf-button>
-              <siaf-button variant="accent" size="md" [disabled]="!detalle()?.aceptarHabilitado()" (click)="detalle()?.aceptar()">Aceptar</siaf-button>
+              <siaf-button variant="accent" size="md" [disabled]="!detalleHabilitado()" (click)="detalle()?.aceptar()">Aceptar</siaf-button>
             } @else {
               <siaf-button variant="accent" size="md" icon="add" [iconOnly]="true" [disabled]="registros().length > 0" ariaLabel="Añadir" siafTooltip="Añadir" (click)="abrirForm()" />
             }
           </div>
 
           @if (mostrandoForm()) {
-            <siaf-indicador-desempeno-detalle (saved)="onRegistroGuardado($event)" (canceled)="cancelarForm()" />
+            <siaf-indicador-desempeno-detalle (habilitadoChange)="detalleHabilitado.set($event)" (saved)="onRegistroGuardado($event)" (canceled)="cancelarForm()" />
           } @else if (registros().length) {
             <div class="flex flex-col gap-siaf-md">
               <div class="flex items-center gap-siaf-sm">
@@ -259,10 +260,10 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             </div>
           }
         </siaf-solicitude-form-card>
+        }
 
         @if (grabado()) {
           <siaf-action-tracker [showSummaryCards]="true" [showTabs]="false" [summaryItems]="trazabilidad()" />
-        }
         }
       </siaf-solicitude-page-layout>
 
@@ -323,6 +324,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar
           [open]="snackbarElaboradoVisible()"
           variant="creation-elaborated"
+          [requestType]="tipoSolicitud()"
           [requestNumber]="numeroDocumento"
           (closed)="snackbarElaboradoVisible.set(false)"
         />
@@ -333,6 +335,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar
           [open]="snackbarVerificadoVisible()"
           variant="creation-verified"
+          [requestType]="tipoSolicitud()"
           requestAction="verificado y enviado"
           [requestNumber]="numeroDocumento"
           (closed)="snackbarVerificadoVisible.set(false)"
@@ -371,6 +374,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly actionType = signal(this.route.snapshot.queryParamMap.get('actionType') ?? 'creacion');
   readonly esModificacion = computed(() => this.actionType() === 'modificacion');
   readonly secondaryText = computed(() => (this.esModificacion() ? 'Modificación' : 'Creación'));
+  readonly tipoSolicitud = computed(() => (this.esModificacion() ? 'modificación' : 'creación'));
 
   // Modificación: tipo (Atributos / Año fin de medición), elegido a mano.
   readonly tipoModificacion = signal('');
@@ -417,6 +421,8 @@ export class IndicadorDesempenoRequestComponent {
   ];
 
   readonly mostrandoForm = signal(false);
+  /** Habilitación del formulario DETALLE (la emite el hijo); habilita «Aceptar» de forma fiable. */
+  readonly detalleHabilitado = signal(false);
   readonly registros = signal<IndicadorRegistrado[]>([]);
   readonly seleccionados = signal<Set<number>>(new Set());
   readonly modalEliminar = signal(false);
