@@ -86,7 +86,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               class="block md:max-w-[360px]"
               type="select"
               placeholder="Tipo de modificación"
-              [disabled]="grabado()"
+              [disabled]="grabado() || indicadoresModificar().length > 0"
               [options]="opcTipoModificacion"
               [value]="tipoModificacion()"
               (valueChange)="tipoModificacion.set($any($event))"
@@ -271,12 +271,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <siaf-catalog-selection-modal
         [open]="modalBuscarIndicador()"
         title="Seleccionar registro"
-        [multiple]="true"
+        [mostrarMarcador]="true"
         [pageSize]="25"
         [columns]="columnasIndicador"
         [rows]="filasIndicador"
-        [selectedIds]="idsModificar()"
-        (acceptedMultiple)="onIndicadoresModificarAceptado($event)"
+        [selectedId]="idsModificar()[0] ?? null"
+        (accepted)="onIndicadoresModificarAceptado($event)"
         (closed)="modalBuscarIndicador.set(false)"
       />
 
@@ -484,9 +484,10 @@ export class IndicadorDesempenoRequestComponent {
     return this.dimensionLabel[ind.dimension] ?? ind.dimension;
   }
 
-  /** Al aceptar la búsqueda, guarda los indicadores a modificar y cierra el modal. */
-  onIndicadoresModificarAceptado(codigos: string[]): void {
-    this.indicadoresModificar.set(INDICADORES_DEMO.filter((i) => codigos.includes(i.codigo)));
+  /** Al aceptar la búsqueda (un solo registro, por regla de negocio), guarda el indicador y cierra el modal. */
+  onIndicadoresModificarAceptado(codigo: string): void {
+    const ind = INDICADORES_DEMO.find((i) => i.codigo === codigo);
+    this.indicadoresModificar.set(ind ? [ind] : []);
     this.modSeleccionados.set(new Set());
     this.busquedaMod.set('');
     this.modalBuscarIndicador.set(false);

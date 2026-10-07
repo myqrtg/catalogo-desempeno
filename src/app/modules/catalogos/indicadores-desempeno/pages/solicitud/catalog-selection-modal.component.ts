@@ -72,7 +72,12 @@ export interface CatalogRow {
                           <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
                         </div>
                       } @else {
-                        <input type="radio" name="catalog-selection" [checked]="estaSeleccionada(fila.id)" (change)="alternar(fila.id)" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
+                        <div class="flex items-center gap-siaf-sm">
+                          <input type="radio" name="catalog-selection" [checked]="estaSeleccionada(fila.id)" (change)="alternar(fila.id)" (click)="$event.stopPropagation()" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
+                          @if (mostrarMarcador) {
+                            <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
+                          }
+                        </div>
                       }
                     </td>
                     @for (col of columns; track col.key) {
@@ -117,6 +122,8 @@ export class CatalogSelectionModalComponent {
   @Input() pageSize = 10;
   /** Con `multiple`, la selección es por casillas (varios registros); si no, radio único. */
   @Input() multiple = false;
+  /** Muestra el ícono de marcador (≡) junto al control de selección. */
+  @Input() mostrarMarcador = false;
 
   @Output() closed = new EventEmitter<void>();
   @Output() accepted = new EventEmitter<string>();
