@@ -326,7 +326,7 @@ export class IndicadorDesempenoDetalleComponent {
 
   // ── Cobertura de medición ─────────────────────────────────────────
   // Alcance geográfico: casillas combinables (Nacional, Regional, Local). El valor es la unión elegida.
-  private readonly ordenAlcance = ['Nacional', 'Regional', 'Local'];
+  private readonly ordenAlcance = ['Nacional', 'Regional'];
   readonly opcionesAlcance = this.ordenAlcance;
   readonly alcanceSel = signal<Set<string>>(new Set());
   readonly alcanceGeografico = computed(() => this.ordenAlcance.filter((o) => this.alcanceSel().has(o)).join(', '));
@@ -399,7 +399,7 @@ export class IndicadorDesempenoDetalleComponent {
   );
   readonly opcTipoFuente = ['INEI', 'Registro administrativo', 'Encuesta', 'Censo', 'Estudio especializado'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
-  readonly opcNivelResponsable = ['Nacional', 'Regional', 'Local'].map((v) => ({ value: v, label: v }));
+  readonly opcNivelResponsable = ['Nacional', 'Regional'].map((v) => ({ value: v, label: v }));
   // Catálogos de la desagregación geográfica (departamentos, área y periodicidad numeradas).
   readonly opcAmbito = [
     '1 AMAZONAS', '2 ANCASH', '3 APURIMAC', '4 AREQUIPA', '5 AYACUCHO', '6 CAJAMARCA', '7 CALLAO',
