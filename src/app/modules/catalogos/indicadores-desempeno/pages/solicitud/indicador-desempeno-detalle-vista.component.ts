@@ -78,7 +78,7 @@ import { IndicadorDetalleResumen } from './indicador-desempeno-detalle.component
                 <span class="text-sm text-text">{{ v(indicador.nombre) }}</span>
               </div>
               <div class="flex flex-col gap-siaf-xxs">
-                <span class="text-xs text-text-muted">Nivel de medición</span>
+                <span class="text-xs text-text-muted">Ámbito de control</span>
                 <span class="text-sm text-text">{{ v(indicador.nivelMedicion) }}</span>
               </div>
             </div>

@@ -54,7 +54,7 @@
     </div>
   </div>
 
-  <siaf-radio-group label="Nivel de medición" name="nivel-medicion" [inline]="true" [required]="true" [disabled]="bloqueado('otros')" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
+  <siaf-radio-group label="Ámbito de control" name="nivel-medicion" [inline]="true" [required]="true" [disabled]="bloqueado('otros')" [options]="opcNivelMedicion" [value]="nivelMedicion()" (valueChange)="nivelMedicion.set($event)" />
 
   <!-- Producto: solo cuando el nivel de medición es «2. Producto» -->
   @if (nivelMedicion() === '2. Producto') {

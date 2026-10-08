@@ -132,7 +132,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                           <th class="w-20 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm"></th>
                           <th class="w-[140px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Código indicador</th>
                           <th class="border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nombre indicador</th>
-                          <th class="w-[180px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nivel de medición</th>
+                          <th class="w-[180px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Ámbito de control</th>
                           <th class="w-[200px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Dimensión de desempeño</th>
                         </tr>
                       </thead>
@@ -201,7 +201,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                       <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm" rowspan="2"></th>
                       <th class="w-[140px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Código indicador</th>
                       <th class="w-[240px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Nombre indicador</th>
-                      <th class="w-[160px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Nivel de medición</th>
+                      <th class="w-[160px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Ámbito de control</th>
                       <th class="w-[190px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Dimensión de desempeño</th>
                       <th class="w-[320px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Programa presupuestal</th>
                       <th class="w-[320px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Producto</th>
@@ -405,7 +405,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly columnasIndicador: CatalogColumn[] = [
     { key: 'codigo', label: 'Código indicador', widthClass: 'w-[140px]' },
     { key: 'nombre', label: 'Nombre indicador' },
-    { key: 'nivelMedicion', label: 'Nivel de medición', widthClass: 'w-[180px]' },
+    { key: 'nivelMedicion', label: 'Ámbito de control', widthClass: 'w-[180px]' },
     { key: 'dimension', label: 'Dimensión de desempeño', widthClass: 'w-[200px]' },
   ];
   readonly filasIndicador: CatalogRow[] = INDICADORES_DEMO.map((i) => ({
