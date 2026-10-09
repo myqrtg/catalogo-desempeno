@@ -5,6 +5,7 @@ import { ButtonComponent } from '../../../../../shared/ui/button/button.componen
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { FocoDirective } from '../../../../../shared/ui/foco/foco.directive';
 import { IconComponent } from '../../../../../shared/ui/icon/icon.component';
+import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 
 export interface CatalogColumn {
   key: string;
@@ -25,7 +26,7 @@ export interface CatalogRow {
 @Component({
   selector: 'siaf-catalog-selection-modal',
   standalone: true,
-  imports: [NgClass, ButtonComponent, TextFieldComponent, FocoDirective, IconComponent],
+  imports: [NgClass, ButtonComponent, TextFieldComponent, FocoDirective, IconComponent, TooltipDirective],
   template: `
     @if (open) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-[color:rgba(0,0,0,0.5)] p-siaf-md" (click)="cerrar()">
@@ -52,7 +53,11 @@ export interface CatalogRow {
             <table class="w-full border-collapse text-sm">
               <thead>
                 <tr class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
-                  <th class="w-12 px-siaf-md py-siaf-sm"></th>
+                  <th class="w-12 px-siaf-md py-siaf-sm">
+                    @if (multiple) {
+                      <input type="checkbox" class="size-5" [checked]="todasMarcadas()" (change)="alternarTodas($any($event.target).checked)" siafTooltip="Seleccionar todo" aria-label="Seleccionar todo" />
+                    }
+                  </th>
                   @for (col of columns; track col.key) {
                     <th class="px-siaf-md py-siaf-sm text-left" [ngClass]="col.widthClass">{{ col.label }}</th>
                   }
@@ -69,7 +74,9 @@ export interface CatalogRow {
                       @if (multiple) {
                         <div class="flex items-center gap-siaf-sm">
                           <input type="checkbox" class="size-5" [checked]="estaSeleccionada(fila.id)" (change)="alternar(fila.id)" (click)="$event.stopPropagation()" [attr.aria-label]="'Seleccionar ' + fila[columns[0].key]" />
-                          <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
+                          @if (mostrarMarcador) {
+                            <siaf-icon name="segment" [size]="20" class="text-[var(--sys-color-text-neutral-medium)]" aria-hidden="true" />
+                          }
                         </div>
                       } @else {
                         <div class="flex items-center gap-siaf-sm">
@@ -136,6 +143,17 @@ export class CatalogSelectionModalComponent {
 
   estaSeleccionada(id: string): boolean {
     return this.seleccionados().has(id);
+  }
+
+  /** Todas las filas (filtradas) están marcadas. */
+  todasMarcadas(): boolean {
+    const filas = this.filtradas();
+    return filas.length > 0 && filas.every((f) => this.seleccionados().has(f.id));
+  }
+
+  /** «Seleccionar todo» (como Gmail): marca o desmarca todas las filas filtradas. */
+  alternarTodas(marcado: boolean): void {
+    this.seleccionados.set(marcado ? new Set(this.filtradas().map((f) => f.id)) : new Set());
   }
 
   haySeleccion(): boolean {

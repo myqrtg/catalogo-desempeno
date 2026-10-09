@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, comput
 
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { RadioComponent } from '../../../../../shared/ui/radio/radio.component';
+import { TagComponent } from '../../../../../shared/ui/tag/tag.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
 import { UploadSideNavComponent } from '../../../../../shared/ui/upload-side-nav/upload-side-nav.component';
 import { UploadedFileCardComponent, UploadedFileInfo } from '../../../../../shared/ui/uploaded-file-card/uploaded-file-card.component';
@@ -221,6 +222,7 @@ const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
   standalone: true,
   imports: [
     ButtonComponent,
+    TagComponent,
     RadioComponent,
     TextFieldComponent,
     UploadSideNavComponent,
@@ -256,13 +258,27 @@ export class IndicadorDesempenoDetalleComponent {
     'validaciones', 'codigoComentado', 'sustento', 'programacion', 'gestion', 'evaluacion',
   ]);
 
-  /** ¿El campo está bloqueado según el modo? En creación nunca; en año-fin solo «anioFin» y «sustento» quedan libres. */
+  // En año-fin se editan «Año Fin», el sustento y la Vigencia en procesos (perfil DCGP-DGPP).
+  private readonly editablesAnioFin = new Set(['anioFin', 'sustento', 'programacion', 'gestion']);
+
+  /** ¿El campo está bloqueado según el modo? En creación nunca; en modificación solo su conjunto editable queda libre. */
   bloqueado(campo: string): boolean {
     const m = this._modo();
     if (m === 'creacion') return false;
-    if (m === 'anio-fin') return campo !== 'anioFin' && campo !== 'sustento';
+    if (m === 'anio-fin') return !this.editablesAnioFin.has(campo);
     return !this.editablesAtributos.has(campo);
   }
+
+  // Vigencia original (al precargar) para detectar cambios de «Sí» a «No».
+  private readonly vigenciaOriginal = signal({ p: '', g: '', e: '' });
+  /** Alguna Vigencia en procesos pasó de «Sí» a «No» respecto de lo precargado. */
+  readonly vigenciaBajada = computed(() => {
+    const o = this.vigenciaOriginal();
+    return (o.p === 'SI' && this.programacion() === 'NO')
+      || (o.g === 'SI' && this.gestion() === 'NO');
+  });
+  /** Programación está en «No» (regla de año-fin). */
+  readonly programacionEnNo = computed(() => this.programacion() === 'NO');
 
   /** Foto de los campos editables en modificación (para saber si hubo cambios). */
   private readonly estadoModificables = computed(() => JSON.stringify({
@@ -344,8 +360,17 @@ export class IndicadorDesempenoDetalleComponent {
   }
   readonly nivelResponsable = signal('');
 
+  // ── Desagregación geográfica: Área y Periodicidad comunes + varios ámbitos (modal). ──
+  readonly desagArea = signal('');
+  readonly desagPeriodicidad = signal('');
+  readonly desagAmbitos = signal<string[]>([]);
+  readonly modalAmbito = signal(false);
+  /** Una fila por ámbito elegido, con el área y periodicidad comunes (formato que consume la tabla/resumen). */
+  readonly desagregaciones = computed<FilaDesagregacion[]>(() =>
+    this.desagAmbitos().map((ambito) => ({ ambito, area: this.desagArea(), periodicidad: this.desagPeriodicidad() })),
+  );
+
   // ── Tablas dinámicas ──────────────────────────────────────────────
-  readonly desagregaciones = signal<FilaDesagregacion[]>([{ ambito: '', area: '', periodicidad: '' }]);
   readonly variables = signal<FilaVariable[]>([{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
   readonly validaciones = signal<FilaValidacion[]>([{ elemento: '', descripcion: '' }]);
 
@@ -356,12 +381,22 @@ export class IndicadorDesempenoDetalleComponent {
   readonly panelSustento = signal(false);
 
   // ── Vigencia en procesos ──────────────────────────────────────────
-  readonly programacion = signal('');
-  readonly gestion = signal('');
-  readonly evaluacion = signal('');
+  readonly programacion = signal('NO'); // fija en «No» y deshabilitada (regla de negocio).
+  readonly gestion = signal('NO'); // fija en «No» y deshabilitada (regla de negocio).
+  readonly evaluacion = signal('NO'); // Evaluación (E): fija en «No» y deshabilitada (regla de negocio).
 
   // ── Medición y Vigencia (prellenadas de ejemplo; se asignan al aceptar) ──
-  readonly anioInicioMedicion = signal('2027');
+  // Año de inicio de medición: en creación se calcula según Vigencia en procesos (reglas de negocio); al modificar,
+  // conserva el valor registrado.
+  private readonly anioInicioManual = signal('----');
+  readonly anioInicioMedicion = computed(() => {
+    if (this._modo() !== 'creacion') return this.anioInicioManual();
+    const t = new Date().getFullYear();
+    // Caso A: Gestión = Sí (sin importar Programación) → año t. Caso B: Programación = Sí y Gestión = No → año t+1.
+    if (this.gestion() === 'SI') return String(t);
+    if (this.programacion() === 'SI' && this.gestion() === 'NO') return String(t + 1);
+    return '----';
+  });
   readonly anioFinMedicion = signal('----');
   readonly estadoVigencia = signal('SI');
   readonly fechaDesde = signal('23/01/2026');
@@ -401,12 +436,14 @@ export class IndicadorDesempenoDetalleComponent {
   readonly opcPeriodicidad = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
   readonly opcNivelResponsable = ['Nacional', 'Regional'].map((v) => ({ value: v, label: v }));
   // Catálogos de la desagregación geográfica (departamentos, área y periodicidad numeradas).
-  readonly opcAmbito = [
-    '1 AMAZONAS', '2 ANCASH', '3 APURIMAC', '4 AREQUIPA', '5 AYACUCHO', '6 CAJAMARCA', '7 CALLAO',
+  readonly ambitosGeograficos = [
+    '65 PERU', '1 AMAZONAS', '2 ANCASH', '3 APURIMAC', '4 AREQUIPA', '5 AYACUCHO', '6 CAJAMARCA', '7 CALLAO',
     '8 CUSCO', '9 HUANCAVELICA', '10 HUANUCO', '11 ICA', '12 JUNIN', '13 LA LIBERTAD', '14 LAMBAYEQUE',
-    '15 LIMA', '16 LORETO', '17 MADRE DE DIOS', '18 MOQUEGUA', '19 PASCO', '20 PIURA', '21 PUNO',
-    '22 SAN MARTIN', '23 TACNA', '24 TUMBES', '25 UCAYALI',
-  ].map((v) => ({ value: v, label: v }));
+    '16 LORETO', '17 MADRE DE DIOS', '18 MOQUEGUA', '19 PASCO', '20 PIURA', '21 PUNO',
+    '22 SAN MARTIN', '23 TACNA', '24 TUMBES', '25 UCAYALI', '64 LIMA PROVINCIA',
+  ];
+  readonly columnasAmbito = [{ key: 'nombre', label: 'Ámbito geográfico' }];
+  readonly filasAmbito = this.ambitosGeograficos.map((a) => ({ id: a, nombre: a }));
   readonly opcArea = ['1 TOTAL', '2 URBANO', '3 RURAL'].map((v) => ({ value: v, label: v }));
   readonly opcPeriodicidadTabla = ['Anual', 'Semestral', 'Trimestral'].map((v) => ({ value: v, label: v }));
   // Indicadores de ejemplo del programa elegido (del Excel del taller); si no hay programa, todos.
@@ -559,20 +596,18 @@ export class IndicadorDesempenoDetalleComponent {
   }
 
 
-  // ── Tablas dinámicas ──────────────────────────────────────────────
-  agregarDesagregacion(): void {
-    this.desagregaciones.update((f) => [...f, { ambito: '', area: '', periodicidad: '' }]);
+  // ── Desagregación: ámbitos por modal ──────────────────────────────
+  /** Al aceptar el modal, guarda los ámbitos elegidos. */
+  onAmbitosAceptados(ambitos: string[]): void {
+    this.desagAmbitos.set(ambitos);
+    this.modalAmbito.set(false);
   }
-  actualizarDesagregacion(i: number, campo: keyof FilaDesagregacion, valor: string): void {
-    this.desagregaciones.update((f) => f.map((fila, idx) => (idx === i ? { ...fila, [campo]: valor } : fila)));
-  }
-  eliminarDesagregacion(i: number): void {
-    this.desagregaciones.update((f) => {
-      const next = f.filter((_, idx) => idx !== i);
-      return next.length ? next : [{ ambito: '', area: '', periodicidad: '' }];
-    });
+  /** Quita un ámbito de la selección. */
+  quitarAmbito(ambito: string): void {
+    this.desagAmbitos.update((a) => a.filter((x) => x !== ambito));
   }
 
+  // ── Tablas dinámicas ──────────────────────────────────────────────
   agregarVariable(): void {
     this.variables.update((f) => [...f, { variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
   }
@@ -636,15 +671,18 @@ export class IndicadorDesempenoDetalleComponent {
     this.periodicidad.set(ind.periodicidad);
     this.alcanceSel.set(new Set(this.ordenAlcance.filter((o) => new RegExp(`\\b${o}\\b`).test(ind.alcance))));
     this.nivelResponsable.set(ind.nivelResponsable);
-    this.programacion.set(ind.programacion);
-    this.gestion.set(ind.gestion);
-    this.evaluacion.set(ind.evaluacion);
-    this.anioInicioMedicion.set(ind.anioInicio || '----');
+    this.programacion.set('NO'); // Vigencia en procesos fija en «No» (deshabilitada).
+    this.gestion.set('NO');
+    this.evaluacion.set('NO');
+    this.anioInicioManual.set(ind.anioInicio || '----');
     this.anioFinMedicion.set(ind.anioFin || '----');
+    this.vigenciaOriginal.set({ p: ind.programacion, g: ind.gestion, e: ind.evaluacion });
     this.estadoVigencia.set(ind.estado);
     this.fechaDesde.set(ind.fechaDesde || '--/--/----');
     this.fechaHasta.set(ind.fechaHasta || '--/--/----');
-    this.desagregaciones.set(ind.desagregaciones.length ? ind.desagregaciones.map((d) => ({ ...d })) : [{ ambito: '', area: '', periodicidad: '' }]);
+    this.desagArea.set(ind.desagregaciones[0]?.area ?? '');
+    this.desagPeriodicidad.set(ind.desagregaciones[0]?.periodicidad ?? '');
+    this.desagAmbitos.set([...new Set(ind.desagregaciones.map((d) => d.ambito).filter(Boolean))]);
     this.variables.set(ind.variables.length ? ind.variables.map((v) => ({ ...v })) : [{ variable: '', descripcion: '', fuente: '', tipoVariable: '' }]);
     this.validaciones.set(ind.validaciones.length ? ind.validaciones.map((v) => ({ ...v })) : [{ elemento: '', descripcion: '' }]);
     this.codigoComentado.set({ name: 'Código comentado.pdf', size: 500 * 1024 });

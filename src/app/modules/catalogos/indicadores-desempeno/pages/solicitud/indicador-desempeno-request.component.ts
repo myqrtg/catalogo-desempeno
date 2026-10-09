@@ -275,9 +275,38 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         [pageSize]="25"
         [columns]="columnasIndicador"
         [rows]="filasIndicador"
-        [selectedId]="idsModificar()[0] ?? null"
+        [selectedId]="idsModificar()[0] || null"
         (accepted)="onIndicadoresModificarAceptado($event)"
         (closed)="modalBuscarIndicador.set(false)"
+      />
+
+      <!-- Alerta preventiva: se bajó una Vigencia de «Sí» a «No» en un indicador con uso activo. -->
+      <siaf-modal
+        [open]="modalAlertaVigencia()"
+        variant="custom"
+        icon="warning"
+        [showIllustration]="true"
+        title="Vigencia en procesos con uso activo"
+        description="Este indicador tiene uso activo en los módulos de programación, seguimiento o evaluación del SIAF-RP para el año fiscal en curso. La actualización se registrará bajo su responsabilidad. ¿Desea continuar?"
+        confirmLabel="Confirmar"
+        (confirmed)="confirmarEdicionMod()"
+        (canceled)="modalAlertaVigencia.set(false)"
+        (closed)="modalAlertaVigencia.set(false)"
+      />
+
+      <!-- Error: en Año fin, Programación debe quedar en «No». -->
+      <siaf-modal
+        [open]="modalErrorProgramacion()"
+        variant="custom"
+        icon="error"
+        [showIllustration]="true"
+        title="No se puede registrar"
+        description="Para una modificación por Año fin de medición, el proceso de Programación (P) debe registrarse en «No»."
+        confirmLabel="Aceptar"
+        [showFooter]="true"
+        (confirmed)="modalErrorProgramacion.set(false)"
+        (canceled)="modalErrorProgramacion.set(false)"
+        (closed)="modalErrorProgramacion.set(false)"
       />
 
       <!-- Confirmación de grabado del documento. -->
@@ -384,6 +413,8 @@ export class IndicadorDesempenoRequestComponent {
   readonly busquedaMod = signal('');
   readonly modSeleccionados = signal<Set<string>>(new Set());
   readonly editandoIndicador = signal<IndicadorDemo | null>(null);
+  readonly modalAlertaVigencia = signal(false);
+  readonly modalErrorProgramacion = signal(false);
   readonly snackbarCambiosVisible = signal(false);
   /** Hay cambios confirmados en modificación: habilita «Grabar». */
   readonly modCambiosGuardados = signal(false);
@@ -531,7 +562,25 @@ export class IndicadorDesempenoRequestComponent {
     this.editandoIndicador.set(null);
   }
 
+  /** Al aceptar la edición, aplica las reglas de negocio de Vigencia antes de confirmar. */
   aceptarEdicionMod(): void {
+    const det = this.detalle();
+    // Año fin (DCGP-DGPP): Programación debe quedar en «No», si no, error.
+    if (this.tipoModificacion() === 'anio-fin' && det && !det.programacionEnNo()) {
+      this.modalErrorProgramacion.set(true);
+      return;
+    }
+    // Atributos: si se bajó una Vigencia de «Sí» a «No», alerta preventiva antes de registrar.
+    if (this.tipoModificacion() === 'atributos' && det?.vigenciaBajada()) {
+      this.modalAlertaVigencia.set(true);
+      return;
+    }
+    this.confirmarEdicionMod();
+  }
+
+  /** Confirma el registro de la edición: cierra el formulario, avisa y habilita Grabar. */
+  confirmarEdicionMod(): void {
+    this.modalAlertaVigencia.set(false);
     this.editandoIndicador.set(null);
     this.modSeleccionados.set(new Set());
     this.modCambiosGuardados.set(true);

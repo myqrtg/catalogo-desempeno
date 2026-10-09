@@ -130,24 +130,38 @@
   <siaf-input class="md:max-w-[520px]" label="Nivel responsable del registro" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('otros')" [options]="opcNivelResponsable" [value]="nivelResponsable()" (valueChange)="nivelResponsable.set($any($event))" />
 
   <!-- ── DESAGREGACIÓN GEOGRÁFICA ── -->
-  <div class="flex flex-col gap-siaf-sm">
+  <div class="flex flex-col gap-siaf-md">
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Desagregación geográfica de medición</h3>
-    <div class="rounded-siaf-md border border-[var(--sys-color-divider-default)]">
-      <div class="hidden md:grid grid-cols-3 gap-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
-        <span>Ámbito geográfico</span><span>Área geográfica</span><span>Periodicidad</span>
+
+    <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
+      <siaf-input label="Área geográfica" type="select" placeholder="Seleccione" [disabled]="bloqueado('desagregacion')" [options]="opcArea" [value]="desagArea()" (valueChange)="desagArea.set($any($event))" />
+      <siaf-input label="Periodicidad" type="select" placeholder="Seleccione" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="desagPeriodicidad()" (valueChange)="desagPeriodicidad.set($any($event))" />
+    </div>
+
+    <div class="flex flex-col gap-siaf-xs">
+      <div class="flex min-h-10 items-center justify-between gap-siaf-md">
+        <h4 class="m-0 text-sm font-bold text-text">Ámbito geográfico <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
+        <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar ámbito geográfico" siafTooltip="Buscar" [disabled]="bloqueado('desagregacion')" (click)="modalAmbito.set(true)" />
       </div>
-      @for (fila of desagregaciones(); track $index) {
-        <div class="flex items-start gap-siaf-sm border-t border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm">
-          <div class="grid min-w-0 flex-1 grid-cols-1 md:grid-cols-3 items-start gap-siaf-md">
-            <siaf-input type="select" placeholder="Ámbito geográfico" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcAmbito" [value]="fila.ambito" (valueChange)="actualizarDesagregacion($index, 'ambito', $any($event))" />
-            <siaf-input type="select" placeholder="Área geográfica" [disabled]="bloqueado('desagregacion')" [options]="opcArea" [value]="fila.area" (valueChange)="actualizarDesagregacion($index, 'area', $any($event))" />
-            <siaf-input type="select" placeholder="Periodicidad" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="fila.periodicidad" (valueChange)="actualizarDesagregacion($index, 'periodicidad', $any($event))" />
-          </div>
-          <siaf-button class="mt-1 shrink-0" variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar desagregación" siafTooltip="Eliminar" [disabled]="bloqueado('desagregacion')" (click)="eliminarDesagregacion($index)" />
+      @if (desagAmbitos().length) {
+        <div class="flex flex-wrap gap-siaf-sm">
+          @for (ambito of desagAmbitos(); track ambito) {
+            <siaf-tag
+              variant="input"
+              [selected]="true"
+              [removable]="!bloqueado('desagregacion')"
+              [disabled]="bloqueado('desagregacion')"
+              removeLabel="Quitar ámbito"
+              (removed)="quitarAmbito(ambito)"
+            >{{ ambito }}</siaf-tag>
+          }
+        </div>
+      } @else {
+        <div class="flex min-h-[49px] items-center rounded-siaf-md bg-[var(--sys-color-bg-surfaces-surface-low)] px-siaf-md py-siaf-sm">
+          <p class="m-0 text-sm text-[var(--sys-color-text-neutral-medium)]">No se han seleccionado ninguna opción. Haga clic en el botón para realizar una selección.</p>
         </div>
       }
     </div>
-    <siaf-button class="self-start" variant="text" size="sm" icon="add" [disabled]="bloqueado('desagregacion')" (click)="agregarDesagregacion()">Agregar Desagregación geográfica</siaf-button>
   </div>
 
   <!-- ── DICCIONARIO DE DATOS ── -->
@@ -210,9 +224,9 @@
   <!-- ── VIGENCIA EN PROCESOS ── -->
   <div class="flex flex-col gap-siaf-md">
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Vigencia en procesos</h3>
-    <siaf-radio-group label="Programación (P)" name="programacion" [inline]="true" [required]="true" [disabled]="bloqueado('programacion')" [options]="opcSiNo" [value]="programacion()" (valueChange)="programacion.set($event)" />
-    <siaf-radio-group label="Gestión (G)" name="gestion" [inline]="true" [required]="true" [disabled]="bloqueado('gestion')" [options]="opcSiNo" [value]="gestion()" (valueChange)="gestion.set($event)" />
-    <siaf-radio-group label="Evaluación (E)" name="evaluacion" [inline]="true" [required]="true" [disabled]="bloqueado('evaluacion')" [options]="opcSiNo" [value]="evaluacion()" (valueChange)="evaluacion.set($event)" />
+    <siaf-radio-group label="Programación (P)" name="programacion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="programacion()" />
+    <siaf-radio-group label="Gestión (G)" name="gestion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="gestion()" />
+    <siaf-radio-group label="Evaluación (E)" name="evaluacion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="evaluacion()" />
   </div>
 
   <!-- ── MEDICIÓN (asignada al aceptar) ── -->
@@ -270,6 +284,19 @@
   [selectedId]="producto()?.id ?? null"
   (accepted)="onProductoAceptado($event)"
   (closed)="modalProducto.set(false)"
+/>
+
+<!-- Modal de selección de ámbito geográfico (multi-selección con «seleccionar todo») -->
+<siaf-catalog-selection-modal
+  [open]="modalAmbito()"
+  title="Seleccionar ámbito geográfico"
+  [multiple]="true"
+  [pageSize]="30"
+  [columns]="columnasAmbito"
+  [rows]="filasAmbito"
+  [selectedIds]="desagAmbitos()"
+  (acceptedMultiple)="onAmbitosAceptados($event)"
+  (closed)="modalAmbito.set(false)"
 />
 
 <!-- Subidas de archivo -->
