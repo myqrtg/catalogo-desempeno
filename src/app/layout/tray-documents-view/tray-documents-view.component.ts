@@ -399,16 +399,23 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
   }
 
   private mapSolicitudToRow(s: SolicitudDemo): TrayDocumentRow {
+    const esIndicadores = s.tipoDocumento.toLowerCase().includes('indicadores');
     return {
       document: s.tipoDocumento,
       number: s.numero || '-',
-      actionType: s.tipoAccion,
+      actionType: this.etiquetaTipoAccion(s.tipoAccion),
       status: s.estado as TrayDocumentStatus,
-      system: 'Sistema Nacional de Contabilidad',
+      system: esIndicadores ? 'Presupuesto' : 'Sistema Nacional de Contabilidad',
       date: s.fecha,
       institutionalScope: s.cuentas[0]?.institutionalScopes || '-',
       entity: s.entidad,
     };
+  }
+
+  /** Muestra el tipo de acción con mayúscula inicial (creacion → Creación). */
+  private etiquetaTipoAccion(tipo: string): string {
+    const mapa: Record<string, string> = { creacion: 'Creación', modificacion: 'Modificación', anulacion: 'Anulación' };
+    return mapa[tipo?.toLowerCase()] ?? tipo;
   }
 
   selectFieldsMenuOption(option: string): void {

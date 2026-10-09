@@ -5,8 +5,8 @@ import {
   CODIGO_DOCUMENTO,
   CuentaBancariaDatos,
   CuentaBancariaRegistro,
-  NOMBRE_DOCUMENTO,
 } from '../modules/tesoreria/cuentas-bancarias/models/cuenta-bancaria.model';
+import { NOMBRE_DOCUMENTO as NOMBRE_DOCUMENTO_IND } from '../modules/catalogos/indicadores-desempeno/config/indicadores-desempeno.rutas';
 import { USUARIOS_DEMO, UsuarioDemo } from './usuarios-demo';
 
 /**
@@ -15,7 +15,7 @@ import { USUARIOS_DEMO, UsuarioDemo } from './usuarios-demo';
  */
 
 const CLAVE = 'taller-siaf-rp:datos';
-const VERSION = 1;
+const VERSION = 3;
 
 export interface NotificacionMock extends NotificacionResponse {
   /** Destinatario: un usuario puntual o, si no hay, todos los perfiles con este rol. */
@@ -33,7 +33,7 @@ export interface DatosTaller {
   secuencia: number;
 }
 
-export const TIPO_DOCUMENTO = { id: 'td-srcb', codigo: CODIGO_DOCUMENTO, nombre: NOMBRE_DOCUMENTO };
+export const TIPO_DOCUMENTO = { id: 'td-ind', codigo: CODIGO_DOCUMENTO, nombre: NOMBRE_DOCUMENTO_IND };
 export const ENTIDAD_CREADORA = { id: 'ent-mef', codMef: '0001', siglas: 'MEF', nombre: 'Ministerio de Economía y Finanzas' };
 export const UNIDAD_CREADORA = { id: 'uo-oga', sigla: 'OGA', nombre: 'Oficina General de Administración' };
 
@@ -70,8 +70,8 @@ export function nuevoId(datos: DatosTaller, prefijo: string): string {
   return `${prefijo}-${datos.secuencia}`;
 }
 
-export function numeroDocumento(correlativo: number, fecha: Date): string {
-  return `PCB-SRCB-${String(correlativo).padStart(5, '0')}-${fecha.getFullYear()}-MEF-OGA`;
+export function numeroDocumento(correlativo: number, _fecha: Date): string {
+  return String(correlativo).padStart(4, '0');
 }
 
 export function filaHistorial(
