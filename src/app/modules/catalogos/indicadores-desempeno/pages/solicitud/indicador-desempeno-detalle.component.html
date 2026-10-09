@@ -141,7 +141,7 @@
     <div class="flex flex-col gap-siaf-xs">
       <div class="flex min-h-10 items-center justify-between gap-siaf-md">
         <h4 class="m-0 text-sm font-bold text-text">Ámbito geográfico <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></h4>
-        <siaf-button variant="accent" size="md" icon="search" [iconOnly]="true" ariaLabel="Buscar ámbito geográfico" siafTooltip="Buscar" [disabled]="bloqueado('desagregacion')" (click)="modalAmbito.set(true)" />
+        <siaf-button variant="accent" size="md" icon="add" [iconOnly]="true" ariaLabel="Agregar ámbito geográfico" siafTooltip="Agregar" [disabled]="bloqueado('desagregacion')" (click)="modalAmbito.set(true)" />
       </div>
       @if (desagAmbitos().length) {
         <div class="flex flex-wrap gap-siaf-sm">
