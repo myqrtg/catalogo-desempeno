@@ -6,6 +6,7 @@ import { SolicitudeInfoCardComponent, SolicitudeInfoField } from '../../../../..
 import { SolicitudePageLayoutComponent } from '../../../../../shared/components/solicitude-page-layout/solicitude-page-layout.component';
 import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
 import { ActionTrackerComponent, ActionTrackerSummary } from '../../../../../shared/ui/action-tracker/action-tracker.component';
+import { DetailHistoryTabsComponent } from '../../../../../shared/components/detail-history-tabs/detail-history-tabs.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
 import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status-tag.component';
@@ -39,6 +40,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     SolicitudeInfoCardComponent,
     SolicitudeFormCardComponent,
     ActionTrackerComponent,
+    DetailHistoryTabsComponent,
     DocumentSummaryCardComponent,
     ButtonComponent,
     IconComponent,
@@ -58,7 +60,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <siaf-solicitude-page-layout
         [breadcrumbs]="breadcrumbs"
         role="creator"
-        [state]="estado()"
+        [state]="headerState()"
         [heading]="heading"
         [secondaryText]="secondaryText()"
         verifyLabel="Verificar y enviar"
@@ -74,13 +76,46 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         @if (grabado()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
             <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
-            <siaf-document-summary-card [documentNumber]="numeroDocumento" [status]="estadoDocumento()" />
+            <siaf-document-summary-card [documentNumber]="numeroDocumento()" [status]="estadoDocumento()" />
           </section>
         } @else {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
         }
 
-        @if (esModificacion()) {
+        @if (esObservado()) {
+          <siaf-solicitude-form-card title="Registro de indicador de desempeño">
+            <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+              <table class="w-full min-w-[720px] border-collapse text-sm">
+                <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+                  <tr>
+                    <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm"><input type="checkbox" class="size-5" aria-label="Seleccionar todos" /></th>
+                    <th class="w-[150px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Código indicador</th>
+                    <th class="border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nombre indicador</th>
+                    <th class="w-[190px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Ámbito de control</th>
+                    <th class="w-[210px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Dimensión de desempeño</th>
+                  </tr>
+                </thead>
+                <tbody class="text-text">
+                  @for (registro of registros(); track registro.id) {
+                    <tr class="border-b border-[var(--sys-color-divider-default)]">
+                      <td class="px-siaf-md py-siaf-sm"><input type="checkbox" class="size-5" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.codigo }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.nombre }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.nivelMedicion }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.dimension }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="flex items-center justify-between gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
+              <span>Filas por página: 25</span>
+              <span>1-{{ registros().length }} de {{ registros().length }}</span>
+            </div>
+          </siaf-solicitude-form-card>
+
+          <siaf-detail-history-tabs [comentario]="comentarioObservacion" />
+        } @else if (esModificacion()) {
           <siaf-solicitude-form-card title="Tipo de modificación">
             <siaf-input
               class="block md:max-w-[360px]"
@@ -354,7 +389,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           [open]="snackbarElaboradoVisible()"
           variant="creation-elaborated"
           [requestType]="tipoSolicitud()"
-          [requestNumber]="numeroDocumento"
+          [requestNumber]="numeroDocumento()"
           (closed)="snackbarElaboradoVisible.set(false)"
         />
       </div>
@@ -366,7 +401,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           variant="creation-verified"
           [requestType]="tipoSolicitud()"
           requestAction="verificado y enviado"
-          [requestNumber]="numeroDocumento"
+          [requestNumber]="numeroDocumento()"
           (closed)="snackbarVerificadoVisible.set(false)"
         />
       </div>
@@ -467,11 +502,17 @@ export class IndicadorDesempenoRequestComponent {
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
-  readonly estado = signal<'new' | 'elaborated' | 'verified'>('new');
+  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
   readonly grabado = computed(() => this.estado() !== 'new');
-  readonly estadoDocumento = computed<FlowStatus>(() => (this.estado() === 'verified' ? 'Verificado' : 'Elaborado'));
-  readonly numeroDocumento = '0001';
+  readonly esObservado = computed(() => this.estado() === 'observed');
+  // En «observed» el header reusa la botonera de «elaborated» (Eliminar/Editar/Verificar).
+  readonly headerState = computed(() => (this.estado() === 'observed' ? 'elaborated' : this.estado()));
+  readonly estadoDocumento = computed<FlowStatus>(() =>
+    this.estado() === 'verified' ? 'Verificado' : this.estado() === 'observed' ? 'Observado' : 'Elaborado',
+  );
+  readonly numeroDocumento = signal('0001');
+  readonly comentarioObservacion = { label: 'Comentario de observación', texto: 'El diccionario de datos está incorrecto' };
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
   private readonly fechaElaboracion = signal('');
   private readonly fechaVerificacion = signal('');
@@ -483,6 +524,30 @@ export class IndicadorDesempenoRequestComponent {
     { label: 'Validado por', actionBy: '', date: '' },
     { label: 'Aceptado por', actionBy: '', date: '' },
   ]);
+
+  constructor() {
+    // Abierta desde la Bandeja en estado Observado: carga el registro, la trazabilidad y el comentario.
+    if (this.route.snapshot.queryParamMap.get('estado') === 'observado') {
+      this.estado.set('observed');
+      this.numeroDocumento.set(this.route.snapshot.queryParamMap.get('numero') || '0001');
+      this.fechaElaboracion.set('19/08/2025 08:00:59');
+      this.registros.set([this.registroObservadoDemo()]);
+    }
+  }
+
+  /** Registro de ejemplo del indicador observado (solo los campos que muestra la tabla de la bandeja). */
+  private registroObservadoDemo(): IndicadorRegistrado {
+    const vacio: IndicadorDetalleResumen = {
+      codigo: '-', nombre: 'Cobertura de parto institucional', nivelMedicion: '2. Producto', dimension: '1. Eficacia',
+      programa: '', producto: '', programacion: '', gestion: '', evaluacion: '', anioInicio: '', anioFin: '',
+      estado: '', fechaDesde: '', fechaHasta: '', programaCodigo: '', programaNombre: '', respCodigo: '', respNombre: '',
+      productoCodigo: '', productoNombre: '', unidadMedida: '', sentido: '', tipoCalculo: '', numerador: '', denominador: '',
+      formula: '', tipoFuente: '', fuenteDatos: '', limitacion: '', supuestos: '', precisiones: '', periodicidad: '',
+      alcanceGeografico: '', nivelResponsable: '', desagregaciones: [], variables: [], validaciones: [],
+      codigoComentado: null, sustento: null,
+    };
+    return { ...vacio, id: 1 };
+  }
 
   // Migas como el diseño: Inicio › Catálogo de indicadores de desempeño › Registro.
   readonly breadcrumbs: BreadcrumbItem[] = [

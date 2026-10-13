@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { CustomFilterApplyEvent, CustomFilterComponent, FilterRow } from '../../shared/components/custom-filter/custom-filter.component';
 import { FilterPillComponent } from '../../shared/components/filter-pill/filter-pill.component';
@@ -173,8 +174,8 @@ type AppliedCustomFilter = {
                 </thead>
                 <tbody>
                   @for (row of paginatedRows; track row.document + row.number) {
-                    <tr class="h-[58px] border-b border-[var(--sys-color-divider-default)] bg-surface text-[var(--sys-color-text-neutral-medium)] hover:bg-[var(--sys-color-bg-states-light-hover)]">
-                      <td class="px-siaf-sm py-siaf-sm"><input class="size-4 accent-[var(--sys-color-icon-states-enabled)]" type="checkbox" /></td>
+                    <tr class="h-[58px] cursor-pointer border-b border-[var(--sys-color-divider-default)] bg-surface text-[var(--sys-color-text-neutral-medium)] hover:bg-[var(--sys-color-bg-states-light-hover)]" (click)="abrirDocumento(row)">
+                      <td class="px-siaf-sm py-siaf-sm"><input class="size-4 accent-[var(--sys-color-icon-states-enabled)]" type="checkbox" (click)="$event.stopPropagation()" /></td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.document }}</td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.number }}</td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.actionType }}</td>
@@ -186,7 +187,7 @@ type AppliedCustomFilter = {
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.institutionalScope }}</td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.entity }}</td>
                       <td class="sticky right-0 border-l border-[var(--sys-color-divider-strong)] bg-surface px-siaf-sm py-siaf-xs">
-                        <button class="inline-flex size-8 items-center justify-center rounded-siaf-md transition hover:bg-surface-muted active:bg-[var(--sys-color-bg-states-light-pressed)]" type="button" aria-label="Historial">
+                        <button class="inline-flex size-8 items-center justify-center rounded-siaf-md transition hover:bg-surface-muted active:bg-[var(--sys-color-bg-states-light-pressed)]" type="button" aria-label="Historial" (click)="$event.stopPropagation()">
                           <siaf-icon name="history" [size]="20" />
                         </button>
                       </td>
@@ -234,6 +235,7 @@ type AppliedCustomFilter = {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TrayDocumentsViewComponent implements OnInit, OnChanges {
+  private readonly router = inject(Router);
   private readonly solicitudesState = inject(SolicitudesStateService);
   private readonly solicitudesFacade = inject(SolicitudesFacadeService);
   private readonly permissionService = inject(PermissionService);
@@ -410,6 +412,14 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
       institutionalScope: s.cuentas[0]?.institutionalScopes || '-',
       entity: s.entidad,
     };
+  }
+
+  /** Al hacer clic en una fila, abre la solicitud de indicadores en su estado actual. */
+  abrirDocumento(row: TrayDocumentRow): void {
+    const estado = row.status.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    void this.router.navigate(['/procesos/catalogo-indicadores-desempeno/solicitud'], {
+      queryParams: { estado, numero: row.number },
+    });
   }
 
   /** Muestra el tipo de acción con mayúscula inicial (creacion → Creación). */
