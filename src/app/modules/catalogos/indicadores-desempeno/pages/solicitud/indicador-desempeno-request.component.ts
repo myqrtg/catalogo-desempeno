@@ -114,7 +114,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             </div>
           </siaf-solicitude-form-card>
 
-          <siaf-detail-history-tabs [comentario]="comentarioObservacion" />
+          <siaf-detail-history-tabs [comentario]="comentarioObservacion" [entries]="historialObservacion" />
         } @else if (esModificacion()) {
           <siaf-solicitude-form-card title="Tipo de modificación">
             <siaf-input
@@ -513,6 +513,18 @@ export class IndicadorDesempenoRequestComponent {
   );
   readonly numeroDocumento = signal('0001');
   readonly comentarioObservacion = { label: 'Comentario de observación', texto: 'El diccionario de datos está incorrecto' };
+  readonly historialObservacion = [
+    {
+      iteracion: 1,
+      proceso: 'Observar Solicitud',
+      comentario: 'Comentario de la Observación',
+      descripcion: 'El diccionario de datos está incorrecto',
+      fecha: '19/08/2025',
+      hora: '08:00:59',
+      rol: 'Evaluador',
+      usuario: 'Karim Lucano Lara',
+    },
+  ];
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
   private readonly fechaElaboracion = signal('');
   private readonly fechaVerificacion = signal('');
