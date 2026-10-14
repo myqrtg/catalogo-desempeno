@@ -66,13 +66,14 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         verifyLabel="Verificar y enviar"
         [showReturn]="true"
         [saveDisabled]="esModificacion() ? !modCambiosGuardados() : (mostrandoForm() || registros().length === 0)"
-        [verifyDisabled]="!elaborado()"
-        [customActions]="subsanado() || editandoObservado()"
+        [verifyDisabled]="verificarDeshabilitado()"
+        [customActions]="edicion() || subsanado() || editandoObservado()"
         (returned)="regresar()"
         (canceled)="onCancelarLayout()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
         (verified)="modalVerificar.set(true)"
+        (deleted)="modalEliminarObservado.set(true)"
       >
         @if (editandoObservado()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
@@ -80,10 +81,10 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!detalleHabilitado()" (click)="aceptarEdicionObservado()">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
-        } @else if (subsanado()) {
+        } @else if (edicion() || subsanado()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
             <siaf-button variant="secondary" size="md" icon="close" (click)="onCancelarLayout()">Cancelar</siaf-button>
-            <siaf-button variant="secondary" size="md" icon="save" (click)="modalGrabar.set(true)">Grabar</siaf-button>
+            <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
         }
@@ -96,7 +97,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
         }
 
-        @if (esObservado() && editandoObservado()) {
+        @if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
             <div card-actions class="flex items-center gap-siaf-sm">
               <siaf-button variant="secondary" size="md" (click)="cancelarEdicionObservado()">Cancelar</siaf-button>
@@ -104,8 +105,27 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             </div>
             <siaf-indicador-desempeno-detalle [prefill]="indicadorObservadoDemo" [modo]="'subsanacion'" (habilitadoChange)="detalleHabilitado.set($event)" (canceled)="cancelarEdicionObservado()" (saved)="aceptarEdicionObservado()" />
           </siaf-solicitude-form-card>
-        } @else if (esObservado()) {
+        } @else if (desdeObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
+            @if (edicion()) {
+              <div card-actions class="flex items-center gap-siaf-sm">
+                <siaf-button variant="accent" size="md" icon="add" [iconOnly]="true" [disabled]="true" ariaLabel="Añadir" siafTooltip="Añadir" />
+              </div>
+            }
+            @if (edicion()) {
+              <div class="flex items-center gap-siaf-md">
+                <siaf-input class="block w-full" label="Buscar" trailingIcon="search" />
+                <siaf-button variant="text" size="md" icon="filter_list" [iconOnly]="true" ariaLabel="Filtros" />
+                <siaf-button variant="text" size="md" icon="more_vert" [iconOnly]="true" ariaLabel="Más opciones" />
+              </div>
+              <div class="flex items-center gap-siaf-sm">
+                <input type="checkbox" class="size-5" [checked]="obsFilaSeleccionada()" (change)="obsFilaSeleccionada.set($any($event.target).checked)" aria-label="Seleccionar todos los registros" />
+                @if (obsFilaSeleccionada()) {
+                  <siaf-button variant="text" size="md" icon="edit" [iconOnly]="true" ariaLabel="Editar" siafTooltip="Editar" (click)="editarIndicadorObservado()" />
+                  <siaf-button variant="text" size="md" icon="delete" [iconOnly]="true" ariaLabel="Eliminar" siafTooltip="Eliminar" (click)="modalEliminarObservado.set(true)" />
+                }
+              </div>
+            }
             <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
               <table class="w-full min-w-[2320px] border-collapse text-sm">
                 <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
@@ -134,7 +154,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
                 <tbody class="text-text">
                   @for (registro of registros(); track registro.id) {
                     <tr class="border-b border-[var(--sys-color-divider-default)]">
-                      <td class="px-siaf-md py-siaf-sm text-center"><input type="checkbox" class="size-5" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
+                      <td class="px-siaf-md py-siaf-sm text-center"><input type="checkbox" class="size-5" [checked]="obsFilaSeleccionada()" (change)="obsFilaSeleccionada.set($any($event.target).checked)" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.codigo }}</td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.nombre }}</td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.nivelMedicion }}</td>
@@ -414,6 +434,16 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (closed)="modalVerificar.set(false)"
       />
 
+      <!-- Confirmación de borrado del registro (en la pantalla de Edición de una observada). -->
+      <siaf-modal
+        [open]="modalEliminarObservado()"
+        variant="delete-record"
+        [showIllustration]="true"
+        (confirmed)="confirmarEliminarObservado()"
+        (canceled)="modalEliminarObservado.set(false)"
+        (closed)="modalEliminarObservado.set(false)"
+      />
+
       <!-- Confirmación de borrado del registro seleccionado. -->
       <siaf-modal
         [open]="modalEliminar()"
@@ -460,6 +490,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <!-- Aviso tras subsanar la observación. -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar [open]="snackbarGuardadoVisible()" variant="changes-saved" (closed)="snackbarGuardadoVisible.set(false)" />
+      </div>
+
+      <!-- Aviso de solicitud eliminada. -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarEliminadoDocVisible()" variant="creation-deleted" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarEliminadoDocVisible.set(false)" />
       </div>
 
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
@@ -553,23 +588,40 @@ export class IndicadorDesempenoRequestComponent {
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
-  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed'>('new');
+  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
   readonly grabado = computed(() => this.estado() !== 'new');
   readonly esObservado = computed(() => this.estado() === 'observed');
+  /** Verificar y enviar: habilitado en Elaborado; en el contexto observado también se mantiene en Verificado. */
+  readonly verificarDeshabilitado = computed(() =>
+    this.desdeObservado() ? !(this.elaborado() || this.estado() === 'verified') : !this.elaborado(),
+  );
   // En «observed» el header reusa la botonera de «elaborated» (Eliminar/Editar/Verificar).
   readonly headerState = computed(() => {
-    // Tag «Edición» + Cancelar/Grabar al editar el formulario o tras subsanar la observación.
-    if (this.editandoObservado() || this.subsanado()) return 'edit';
+    // Tag «Edición» + Cancelar/Grabar al entrar a Edición, editar el formulario o subsanar.
+    if (this.editandoObservado() || this.edicion() || this.subsanado()) return 'edit';
+    // En el contexto observado se mantienen Eliminar/Editar/Verificar en todos los estados.
+    if (this.desdeObservado()) return 'elaborated';
     return this.estado() === 'observed' ? 'elaborated' : this.estado();
   });
   readonly estadoDocumento = computed<FlowStatus>(() =>
-    this.estado() === 'verified' ? 'Verificado' : this.estado() === 'observed' ? 'Observado' : 'Elaborado',
+    this.estado() === 'verified' ? 'Verificado'
+      : this.estado() === 'observed' ? 'Observado'
+      : this.estado() === 'deleted' ? 'Eliminado'
+      : 'Elaborado',
   );
   readonly numeroDocumento = signal('0001');
   readonly comentarioObservacion = { label: 'Comentario de observación', texto: 'El diccionario de datos está incorrecto' };
   readonly editandoObservado = signal(false);
-  /** Tras subsanar la observación, el documento queda en edición (tag «Edición», Grabar habilitado). */
+  /** Contexto «abierta desde la bandeja observada»: persiste aunque el documento avance a Edición/Elaborado. */
+  readonly desdeObservado = signal(false);
+  /** «Edición»: tras pulsar Editar se muestra la tabla con herramientas (+, buscar, editar/eliminar fila). */
+  readonly edicion = signal(false);
+  readonly modalEliminarObservado = signal(false);
+  readonly snackbarEliminadoDocVisible = signal(false);
+  /** Fila seleccionada en la tabla de edición (muestra editar/eliminar). */
+  readonly obsFilaSeleccionada = signal(false);
+  /** Tras subsanar la observación (editar una fila), se habilita «Grabar». */
   readonly subsanado = signal(false);
   readonly snackbarGuardadoVisible = signal(false);
   // Indicador que se precarga en el formulario al subsanar la observación.
@@ -590,13 +642,14 @@ export class IndicadorDesempenoRequestComponent {
     },
   ];
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
+  private readonly verificadorNombre = signal('JUAN DOE PEREZ PEREZ');
   private readonly fechaElaboracion = signal('');
   private readonly fechaVerificacion = signal('');
 
   // Trazabilidad: se van registrando los hitos a medida que avanza el documento.
   readonly trazabilidad = computed<ActionTrackerSummary[]>(() => [
     { label: 'Elaborado por', actionBy: this.elaboradorNombre, date: this.fechaElaboracion() },
-    { label: 'Verificado por', actionBy: this.fechaVerificacion() ? this.elaboradorNombre : '', date: this.fechaVerificacion() },
+    { label: 'Verificado por', actionBy: this.fechaVerificacion() ? this.verificadorNombre() : '', date: this.fechaVerificacion() },
     { label: 'Validado por', actionBy: '', date: '' },
     { label: 'Aceptado por', actionBy: '', date: '' },
   ]);
@@ -604,6 +657,8 @@ export class IndicadorDesempenoRequestComponent {
   constructor() {
     // Abierta desde la Bandeja en estado Observado: carga el registro, la trazabilidad y el comentario.
     if (this.route.snapshot.queryParamMap.get('estado') === 'observado') {
+      this.desdeObservado.set(true);
+      this.verificadorNombre.set('RICARDO JOHN DOE BUSTAMANTE');
       this.estado.set('observed');
       this.numeroDocumento.set(this.route.snapshot.queryParamMap.get('numero') || '0001');
       this.fechaElaboracion.set('19/08/2025 08:00:59');
@@ -770,37 +825,64 @@ export class IndicadorDesempenoRequestComponent {
   /** Confirma el grabado: el documento pasa a «Elaborado», se registra la trazabilidad y se avisa. */
   confirmarGrabar(): void {
     this.modalGrabar.set(false);
+    // Al grabar, la subsanación/edición se cierra y el documento pasa a Elaborado.
+    this.subsanado.set(false);
+    this.editandoObservado.set(false);
+    this.edicion.set(false);
+    this.obsFilaSeleccionada.set(false);
     this.fechaElaboracion.set(new Date().toLocaleString('es-PE'));
     this.estado.set('elaborated');
     setTimeout(() => this.snackbarElaboradoVisible.set(true), 300);
     setTimeout(() => this.snackbarElaboradoVisible.set(false), 300 + 5000);
   }
 
-  /** Editar: en una solicitud observada abre el formulario para subsanar; en elaborado vuelve a «Nuevo». */
+  /** Editar: en el contexto observado entra a «Edición» (tabla con herramientas); si no, vuelve a «Nuevo». */
   editar(): void {
-    if (this.esObservado()) {
-      this.editandoObservado.set(true);
-      setTimeout(() => this.cdr.markForCheck());
+    if (this.desdeObservado()) {
+      this.edicion.set(true);
+      this.obsFilaSeleccionada.set(false);
       return;
     }
     this.estado.set('new');
   }
 
-  /** Cierra el formulario de subsanación sin registrar. */
+  /** Abre el formulario de subsanación del indicador seleccionado. */
+  editarIndicadorObservado(): void {
+    this.editandoObservado.set(true);
+    setTimeout(() => this.cdr.markForCheck());
+  }
+
+  /** Confirma el borrado: la solicitud pasa a «Eliminado», sale de edición y avisa. */
+  confirmarEliminarObservado(): void {
+    this.modalEliminarObservado.set(false);
+    this.obsFilaSeleccionada.set(false);
+    this.edicion.set(false);
+    this.subsanado.set(false);
+    this.editandoObservado.set(false);
+    this.estado.set('deleted');
+    setTimeout(() => this.snackbarEliminadoDocVisible.set(true), 300);
+    setTimeout(() => this.snackbarEliminadoDocVisible.set(false), 300 + 5000);
+  }
+
+  /** Cierra el formulario de subsanación y vuelve a la pantalla de Edición (tabla). */
   cancelarEdicionObservado(): void {
     this.editandoObservado.set(false);
   }
 
-  /** Cancelar del encabezado: si está en edición por subsanación vuelve a la vista; si no, regresa al panel. */
+  /** Cancelar del encabezado: cierra el formulario, o sale de Edición, o regresa al panel. */
   onCancelarLayout(): void {
-    if (this.subsanado()) {
+    if (this.editandoObservado()) {
+      this.editandoObservado.set(false);
+    } else if (this.edicion() || this.subsanado()) {
+      this.edicion.set(false);
       this.subsanado.set(false);
+      this.obsFilaSeleccionada.set(false);
     } else {
       this.regresar();
     }
   }
 
-  /** Registra la subsanación del indicador observado: pasa a «Edición», habilita Grabar y avisa. */
+  /** Registra la subsanación del indicador: vuelve a la tabla de Edición, habilita Grabar y avisa. */
   aceptarEdicionObservado(): void {
     this.editandoObservado.set(false);
     this.subsanado.set(true);
