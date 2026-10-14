@@ -118,7 +118,7 @@ const SUG_VALID_DESCRIPCION: string[] = [
 ];
 
 /** Modo del formulario DETALLE: creación o modificación (por atributos o por año de fin de medición). */
-export type FormularioModo = 'creacion' | 'atributos' | 'anio-fin';
+export type FormularioModo = 'creacion' | 'atributos' | 'anio-fin' | 'subsanacion';
 
 export interface FilaDesagregacion { ambito: string; area: string; periodicidad: string; }
 export interface FilaVariable { variable: string; descripcion: string; fuente: string; tipoVariable: string; }
@@ -264,7 +264,7 @@ export class IndicadorDesempenoDetalleComponent {
   /** ¿El campo está bloqueado según el modo? En creación nunca; en modificación solo su conjunto editable queda libre. */
   bloqueado(campo: string): boolean {
     const m = this._modo();
-    if (m === 'creacion') return false;
+    if (m === 'creacion' || m === 'subsanacion') return false; // subsanación: todo editable
     if (m === 'anio-fin') return !this.editablesAnioFin.has(campo);
     return !this.editablesAtributos.has(campo);
   }
@@ -295,6 +295,22 @@ export class IndicadorDesempenoDetalleComponent {
     gestion: this.gestion(),
     evaluacion: this.evaluacion(),
     anioFin: this.anioFinMedicion(),
+    // Campos adicionales (editables en subsanación): así se detecta cualquier cambio.
+    programa: this.programa()?.codigo ?? '',
+    producto: this.producto()?.codigo ?? '',
+    nombre: this.nombre(),
+    nivelMedicion: this.nivelMedicion(),
+    dimension: this.dimension(),
+    unidadMedida: this.unidadMedida(),
+    sentido: this.sentido(),
+    tipoCalculo: this.tipoCalculo(),
+    numerador: this.numerador(),
+    denominador: this.denominador(),
+    formula: this.formula(),
+    tipoFuente: this.tipoFuente(),
+    fuenteDatos: this.fuenteDatos(),
+    alcance: this.alcanceGeografico(),
+    nivelResponsable: this.nivelResponsable(),
   }));
   readonly huboCambio = computed(() => this.estadoModificables() !== this.snapshotMod());
 

@@ -67,12 +67,26 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         [showReturn]="true"
         [saveDisabled]="esModificacion() ? !modCambiosGuardados() : (mostrandoForm() || registros().length === 0)"
         [verifyDisabled]="!elaborado()"
+        [customActions]="subsanado() || editandoObservado()"
         (returned)="regresar()"
         (canceled)="onCancelarLayout()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
         (verified)="modalVerificar.set(true)"
       >
+        @if (editandoObservado()) {
+          <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
+            <siaf-button variant="secondary" size="md" icon="close" (click)="cancelarEdicionObservado()">Cancelar</siaf-button>
+            <siaf-button variant="secondary" size="md" icon="save" [disabled]="!detalleHabilitado()" (click)="aceptarEdicionObservado()">Grabar</siaf-button>
+            <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
+          </div>
+        } @else if (subsanado()) {
+          <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
+            <siaf-button variant="secondary" size="md" icon="close" (click)="onCancelarLayout()">Cancelar</siaf-button>
+            <siaf-button variant="secondary" size="md" icon="save" (click)="modalGrabar.set(true)">Grabar</siaf-button>
+            <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
+          </div>
+        }
         @if (grabado()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
             <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
@@ -88,7 +102,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               <siaf-button variant="secondary" size="md" (click)="cancelarEdicionObservado()">Cancelar</siaf-button>
               <siaf-button variant="accent" size="md" [disabled]="!detalleHabilitado()" (click)="aceptarEdicionObservado()">Aceptar</siaf-button>
             </div>
-            <siaf-indicador-desempeno-detalle [prefill]="indicadorObservadoDemo" (habilitadoChange)="detalleHabilitado.set($event)" (canceled)="cancelarEdicionObservado()" (saved)="aceptarEdicionObservado()" />
+            <siaf-indicador-desempeno-detalle [prefill]="indicadorObservadoDemo" [modo]="'subsanacion'" (habilitadoChange)="detalleHabilitado.set($event)" (canceled)="cancelarEdicionObservado()" (saved)="aceptarEdicionObservado()" />
           </siaf-solicitude-form-card>
         } @else if (esObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
@@ -545,7 +559,8 @@ export class IndicadorDesempenoRequestComponent {
   readonly esObservado = computed(() => this.estado() === 'observed');
   // En «observed» el header reusa la botonera de «elaborated» (Eliminar/Editar/Verificar).
   readonly headerState = computed(() => {
-    if (this.subsanado()) return 'edit'; // tag «Edición» + Cancelar/Grabar tras subsanar la observación
+    // Tag «Edición» + Cancelar/Grabar al editar el formulario o tras subsanar la observación.
+    if (this.editandoObservado() || this.subsanado()) return 'edit';
     return this.estado() === 'observed' ? 'elaborated' : this.estado();
   });
   readonly estadoDocumento = computed<FlowStatus>(() =>
