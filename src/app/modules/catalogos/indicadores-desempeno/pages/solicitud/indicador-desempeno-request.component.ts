@@ -85,24 +85,48 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         @if (esObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
             <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
-              <table class="w-full min-w-[720px] border-collapse text-sm">
+              <table class="w-full min-w-[2320px] border-collapse text-sm">
                 <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
                   <tr>
-                    <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm"><input type="checkbox" class="size-5" aria-label="Seleccionar todos" /></th>
-                    <th class="w-[150px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Código indicador</th>
-                    <th class="border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nombre indicador</th>
-                    <th class="w-[190px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Ámbito de control</th>
-                    <th class="w-[210px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Dimensión de desempeño</th>
+                    <th class="w-12 border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm" rowspan="2"><input type="checkbox" class="size-5" aria-label="Seleccionar todos" /></th>
+                    <th class="w-[140px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Código indicador</th>
+                    <th class="w-[240px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Nombre indicador</th>
+                    <th class="w-[160px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Ámbito de control</th>
+                    <th class="w-[190px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Dimensión de desempeño</th>
+                    <th class="w-[320px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Programa presupuestal</th>
+                    <th class="w-[320px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Producto</th>
+                    <th class="border-x border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-xs text-center" colspan="3">Vigencia en procesos</th>
+                    <th class="w-[170px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Año de inicio de medición</th>
+                    <th class="w-[170px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left" rowspan="2">Año de fin de medición</th>
+                    <th class="border-x border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-xs text-center" colspan="3">Vigencia</th>
+                  </tr>
+                  <tr>
+                    <th class="w-[56px] border-b border-l border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-center">P</th>
+                    <th class="w-[56px] border-b border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-center">G</th>
+                    <th class="w-[56px] border-b border-r border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-center">E</th>
+                    <th class="w-[90px] border-b border-l border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-center">Estado</th>
+                    <th class="w-[130px] border-b border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-left">Fecha desde</th>
+                    <th class="w-[130px] border-b border-r border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-xs text-left">Fecha hasta</th>
                   </tr>
                 </thead>
                 <tbody class="text-text">
                   @for (registro of registros(); track registro.id) {
                     <tr class="border-b border-[var(--sys-color-divider-default)]">
-                      <td class="px-siaf-md py-siaf-sm"><input type="checkbox" class="size-5" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
+                      <td class="px-siaf-md py-siaf-sm text-center"><input type="checkbox" class="size-5" [attr.aria-label]="'Seleccionar ' + registro.nombre" /></td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.codigo }}</td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.nombre }}</td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.nivelMedicion }}</td>
                       <td class="px-siaf-md py-siaf-sm">{{ registro.dimension }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.programa }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.producto || '—' }}</td>
+                      <td class="border-l border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-sm text-center">{{ registro.programacion }}</td>
+                      <td class="px-siaf-sm py-siaf-sm text-center">{{ registro.gestion }}</td>
+                      <td class="border-r border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-sm text-center">{{ registro.evaluacion }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.anioInicio }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.anioFin }}</td>
+                      <td class="border-l border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-sm text-center">{{ registro.estado }}</td>
+                      <td class="px-siaf-sm py-siaf-sm">{{ registro.fechaDesde }}</td>
+                      <td class="border-r border-[var(--sys-color-divider-default)] px-siaf-sm py-siaf-sm">{{ registro.fechaHasta }}</td>
                     </tr>
                   }
                 </tbody>
@@ -551,8 +575,9 @@ export class IndicadorDesempenoRequestComponent {
   private registroObservadoDemo(): IndicadorRegistrado {
     const vacio: IndicadorDetalleResumen = {
       codigo: '-', nombre: 'Cobertura de parto institucional', nivelMedicion: '2. Producto', dimension: '1. Eficacia',
-      programa: '', producto: '', programacion: '', gestion: '', evaluacion: '', anioInicio: '', anioFin: '',
-      estado: '', fechaDesde: '', fechaHasta: '', programaCodigo: '', programaNombre: '', respCodigo: '', respNombre: '',
+      programa: '0002. SALUD MATERNO NEONATAL', producto: '3033255. Atención del parto normal',
+      programacion: 'Sí', gestion: 'Sí', evaluacion: 'Sí', anioInicio: '2025', anioFin: '',
+      estado: 'Sí', fechaDesde: '19/08/2025', fechaHasta: '', programaCodigo: '', programaNombre: '', respCodigo: '', respNombre: '',
       productoCodigo: '', productoNombre: '', unidadMedida: '', sentido: '', tipoCalculo: '', numerador: '', denominador: '',
       formula: '', tipoFuente: '', fuenteDatos: '', limitacion: '', supuestos: '', precisiones: '', periodicidad: '',
       alcanceGeografico: '', nivelResponsable: '', desagregaciones: [], variables: [], validaciones: [],
