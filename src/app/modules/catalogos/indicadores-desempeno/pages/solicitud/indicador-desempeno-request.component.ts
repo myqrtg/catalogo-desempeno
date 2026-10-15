@@ -13,6 +13,7 @@ import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status
 import { IconComponent } from '../../../../../shared/ui/icon/icon.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
+import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-control/text-area-control.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
@@ -46,6 +47,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     IconComponent,
     ModalComponent,
     TextFieldComponent,
+    TextAreaControlComponent,
     CatalogSelectionModalComponent,
     SnackbarComponent,
     TooltipDirective,
@@ -59,7 +61,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     <div class="min-h-[calc(100vh-56px)] bg-[var(--sys-color-bg-surfaces-surface-lowest)] text-text">
       <siaf-solicitude-page-layout
         [breadcrumbs]="breadcrumbs"
-        role="creator"
+        [role]="revisionAprobador() ? 'approver' : 'creator'"
         [state]="headerState()"
         [heading]="heading"
         [secondaryText]="secondaryText()"
@@ -67,7 +69,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         [showReturn]="true"
         [saveDisabled]="esModificacion() ? !modCambiosGuardados() : (mostrandoForm() || registros().length === 0)"
         [verifyDisabled]="verificarDeshabilitado()"
-        [customActions]="edicion() || subsanado() || editandoObservado()"
+        [customActions]="edicion() || subsanado() || editandoObservado() || revisionAprobador()"
         (returned)="regresar()"
         (canceled)="onCancelarLayout()"
         (saved)="modalGrabar.set(true)"
@@ -87,6 +89,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
+        } @else if (revisionAprobador()) {
+          <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
+            <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
+            <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
+            <siaf-button variant="accent" size="md" icon="task_alt" (click)="modalValidar.set(true)">Validar</siaf-button>
+          </div>
         }
         @if (grabado()) {
           <section class="grid gap-siaf-md lg:grid-cols-[1fr_360px]">
@@ -97,7 +105,36 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
         }
 
-        @if (desdeObservado() && editandoObservado()) {
+        @if (revisionAprobador()) {
+          <siaf-solicitude-form-card title="Registro de indicador de desempeño">
+            <div class="overflow-x-auto rounded-siaf-md border border-[var(--sys-color-divider-default)]">
+              <table class="w-full min-w-[720px] border-collapse text-sm">
+                <thead class="bg-[var(--sys-color-bg-surfaces-surface-low)] text-[11px] font-bold uppercase tracking-[0.5px] text-text-muted">
+                  <tr>
+                    <th class="w-[150px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Código indicador</th>
+                    <th class="border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Nombre indicador</th>
+                    <th class="w-[190px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Ámbito de control</th>
+                    <th class="w-[210px] border-b border-[var(--sys-color-divider-default)] px-siaf-md py-siaf-sm text-left">Dimensión de desempeño</th>
+                  </tr>
+                </thead>
+                <tbody class="text-text">
+                  @for (registro of registros(); track registro.id) {
+                    <tr class="border-b border-[var(--sys-color-divider-default)]">
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.codigo }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.nombre }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.nivelMedicion }}</td>
+                      <td class="px-siaf-md py-siaf-sm">{{ registro.dimension }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="flex items-center justify-between gap-siaf-lg text-sm text-[var(--sys-color-text-neutral-medium)]">
+              <span>Filas por página: 25</span>
+              <span>1-{{ registros().length }} de {{ registros().length }}</span>
+            </div>
+          </siaf-solicitude-form-card>
+        } @else if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
             <div card-actions class="flex items-center gap-siaf-sm">
               <siaf-button variant="secondary" size="md" (click)="cancelarEdicionObservado()">Cancelar</siaf-button>
@@ -410,6 +447,37 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (closed)="modalErrorProgramacion.set(false)"
       />
 
+      <!-- Acciones del aprobador: validar, observar, rechazar. -->
+      <siaf-modal
+        [open]="modalValidar()"
+        variant="custom"
+        title="¿Validar solicitud?"
+        description="Como resultado de la evaluación de la solicitud, el documento de solicitud pasará a estado validado."
+        confirmLabel="Aceptar"
+        [confirmDisabled]="!comentarioValidacion().trim()"
+        (confirmed)="confirmarValidar()"
+        (canceled)="cerrarModalValidar()"
+        (closed)="cerrarModalValidar()"
+      >
+        <text-area-control placeholder="Comentarios de evaluación" [maxlength]="200" [value]="comentarioValidacion()" (valueChange)="comentarioValidacion.set($event)" />
+      </siaf-modal>
+      <siaf-modal
+        [open]="modalObservarAp()"
+        variant="observe"
+        [showIllustration]="true"
+        (confirmed)="modalObservarAp.set(false)"
+        (canceled)="modalObservarAp.set(false)"
+        (closed)="modalObservarAp.set(false)"
+      />
+      <siaf-modal
+        [open]="modalRechazarAp()"
+        variant="reject"
+        [showIllustration]="true"
+        (confirmed)="modalRechazarAp.set(false)"
+        (canceled)="modalRechazarAp.set(false)"
+        (closed)="modalRechazarAp.set(false)"
+      />
+
       <!-- Confirmación de grabado del documento. -->
       <siaf-modal
         [open]="modalGrabar()"
@@ -617,6 +685,12 @@ export class IndicadorDesempenoRequestComponent {
   readonly editandoObservado = signal(false);
   /** Contexto «abierta desde la bandeja observada»: persiste aunque el documento avance a Edición/Elaborado. */
   readonly desdeObservado = signal(false);
+  /** Revisión del aprobador (solicitud Verificada): botones Rechazar/Observar/Validar. */
+  readonly revisionAprobador = signal(false);
+  readonly modalValidar = signal(false);
+  readonly comentarioValidacion = signal('');
+  readonly modalObservarAp = signal(false);
+  readonly modalRechazarAp = signal(false);
   /** «Edición»: tras pulsar Editar se muestra la tabla con herramientas (+, buscar, editar/eliminar fila). */
   readonly edicion = signal(false);
   readonly modalEliminarObservado = signal(false);
@@ -657,6 +731,15 @@ export class IndicadorDesempenoRequestComponent {
   ]);
 
   constructor() {
+    // Abierta desde la Bandeja del aprobador (solicitud Verificada): pantalla de revisión.
+    if (this.route.snapshot.queryParamMap.get('estado') === 'verificado') {
+      this.revisionAprobador.set(true);
+      this.estado.set('verified');
+      this.numeroDocumento.set(this.route.snapshot.queryParamMap.get('numero') || '0001');
+      this.fechaElaboracion.set('19/08/2025 08:00:59');
+      this.fechaVerificacion.set('22/08/2025 08:00:59');
+      this.registros.set([this.registroObservadoDemo()]);
+    }
     // Abierta desde la Bandeja en estado Observado: carga el registro, la trazabilidad y el comentario.
     if (this.route.snapshot.queryParamMap.get('estado') === 'observado') {
       this.desdeObservado.set(true);
@@ -852,6 +935,16 @@ export class IndicadorDesempenoRequestComponent {
   editarIndicadorObservado(): void {
     this.editandoObservado.set(true);
     setTimeout(() => this.cdr.markForCheck());
+  }
+
+  cerrarModalValidar(): void {
+    this.modalValidar.set(false);
+    this.comentarioValidacion.set('');
+  }
+
+  /** Confirma la validación de la solicitud (aprobador). */
+  confirmarValidar(): void {
+    this.cerrarModalValidar();
   }
 
   /** Confirma el borrado: la solicitud pasa a «Eliminado», sale de edición y avisa. */
