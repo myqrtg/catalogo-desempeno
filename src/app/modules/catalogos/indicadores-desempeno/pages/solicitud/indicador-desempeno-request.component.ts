@@ -90,7 +90,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
-        } @else if (revisionAprobador() && !validado() && !observadoAp()) {
+        } @else if (revisionAprobador() && !validado() && !observadoAp() && !rechazadoAp()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
             <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
             <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
@@ -140,6 +140,8 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-detail-history-tabs [comentario]="comentarioEvaluacion()" [entries]="historialEvaluacion()" />
           } @else if (observadoAp()) {
             <siaf-detail-history-tabs [comentario]="comentarioObservacionApObj()" [entries]="historialObservacionAp()" />
+          } @else if (rechazadoAp()) {
+            <siaf-detail-history-tabs [comentario]="comentarioRechazoApObj()" [entries]="historialRechazoAp()" />
           }
         } @else if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
@@ -498,12 +500,25 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       </siaf-modal>
       <siaf-modal
         [open]="modalRechazarAp()"
-        variant="reject"
-        [showIllustration]="true"
-        (confirmed)="modalRechazarAp.set(false)"
-        (canceled)="modalRechazarAp.set(false)"
-        (closed)="modalRechazarAp.set(false)"
-      />
+        variant="custom"
+        title="¿Rechazar solicitud?"
+        description="La solicitud será rechazada."
+        confirmLabel="Aceptar"
+        [confirmDisabled]="!comentarioRechazoAp().trim()"
+        (confirmed)="confirmarRechazarAp()"
+        (canceled)="cerrarModalRechazarAp()"
+        (closed)="cerrarModalRechazarAp()"
+      >
+        <siaf-text-autocomplete
+          [multiline]="true"
+          placeholder="Descripción del motivo de rechazo"
+          [required]="true"
+          [maxlength]="300"
+          [suggestions]="sugerenciasRechazo"
+          [value]="comentarioRechazoAp()"
+          (valueChange)="comentarioRechazoAp.set($event)"
+        />
+      </siaf-modal>
 
       <!-- Confirmación de grabado del documento. -->
       <siaf-modal
@@ -604,6 +619,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar [open]="snackbarObservadoVisible()" variant="creation-observed" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarObservadoVisible.set(false)" />
       </div>
 
+      <!-- Aviso de solicitud rechazada. -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarRechazadoVisible()" variant="creation-rejected" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarRechazadoVisible.set(false)" />
+      </div>
+
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar
@@ -695,7 +715,7 @@ export class IndicadorDesempenoRequestComponent {
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
-  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted' | 'validated'>('new');
+  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted' | 'validated' | 'rejected'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
   readonly grabado = computed(() => this.estado() !== 'new');
   readonly esObservado = computed(() => this.estado() === 'observed');
@@ -709,7 +729,7 @@ export class IndicadorDesempenoRequestComponent {
     if (this.editandoObservado() || this.edicion() || this.subsanado()) return 'edit';
     // En el contexto observado se mantienen Eliminar/Editar/Verificar en todos los estados.
     if (this.desdeObservado()) return 'elaborated';
-    if (this.estado() === 'observed' || this.estado() === 'validated') return 'elaborated';
+    if (this.estado() === 'observed' || this.estado() === 'validated' || this.estado() === 'rejected') return 'elaborated';
     return this.estado();
   });
   readonly estadoDocumento = computed<FlowStatus>(() =>
@@ -717,6 +737,7 @@ export class IndicadorDesempenoRequestComponent {
       : this.estado() === 'observed' ? 'Observado'
       : this.estado() === 'deleted' ? 'Eliminado'
       : this.estado() === 'validated' ? 'Validado'
+      : this.estado() === 'rejected' ? 'Rechazado'
       : 'Elaborado',
   );
   readonly numeroDocumento = signal('0001');
@@ -757,12 +778,27 @@ export class IndicadorDesempenoRequestComponent {
     'Revisar el programa presupuestal y el producto asociados',
   ];
   readonly modalRechazarAp = signal(false);
+  readonly comentarioRechazoAp = signal('');
+  /** Tras rechazar la solicitud: oculta los botones del aprobador y muestra el motivo de rechazo. */
+  readonly rechazadoAp = signal(false);
+  readonly comentarioRechazoApObj = computed(() => ({
+    label: 'Comentario de rechazo',
+    texto: this.comentarioRechazoAp(),
+  }));
+  /** Motivos de rechazo sugeridos para el aprobador. */
+  readonly sugerenciasRechazo = [
+    'Revisión de estructura errado.',
+    'La solicitud no cumple con los requisitos para su aprobación.',
+    'La información registrada presenta inconsistencias.',
+    'El indicador no corresponde al programa presupuestal indicado.',
+  ];
   /** «Edición»: tras pulsar Editar se muestra la tabla con herramientas (+, buscar, editar/eliminar fila). */
   readonly edicion = signal(false);
   readonly modalEliminarObservado = signal(false);
   readonly snackbarEliminadoDocVisible = signal(false);
   readonly snackbarValidadoVisible = signal(false);
   readonly snackbarObservadoVisible = signal(false);
+  readonly snackbarRechazadoVisible = signal(false);
   /** Fila seleccionada en la tabla de edición (muestra editar/eliminar). */
   readonly obsFilaSeleccionada = signal(false);
   /** Tras subsanar la observación (editar una fila), se habilita «Grabar». */
@@ -805,6 +841,19 @@ export class IndicadorDesempenoRequestComponent {
       proceso: 'Observar Solicitud',
       comentario: 'Comentario de la observación',
       descripcion: this.comentarioObservacionAp(),
+      fecha: '19/08/2025',
+      hora: '08:00:59',
+      rol: 'Evaluador',
+      usuario: 'Luis Ramirez Torres',
+    },
+  ]);
+  /** Historial del motivo de rechazo (pestaña «Historial» tras rechazar desde el aprobador). */
+  readonly historialRechazoAp = computed(() => [
+    {
+      iteracion: 1,
+      proceso: 'Rechazar Solicitud',
+      comentario: 'Descripción del motivo de rechazo',
+      descripcion: this.comentarioRechazoAp(),
       fecha: '19/08/2025',
       hora: '08:00:59',
       rol: 'Evaluador',
@@ -1052,6 +1101,22 @@ export class IndicadorDesempenoRequestComponent {
     this.fechaVerificacion.set('');
     setTimeout(() => this.snackbarObservadoVisible.set(true), 300);
     setTimeout(() => this.snackbarObservadoVisible.set(false), 300 + 5000);
+  }
+
+  cerrarModalRechazarAp(): void {
+    this.modalRechazarAp.set(false);
+    this.comentarioRechazoAp.set('');
+  }
+
+  /** Confirma el rechazo: la solicitud pasa a «Rechazado», limpia la verificación y avisa. */
+  confirmarRechazarAp(): void {
+    this.modalRechazarAp.set(false);
+    this.estado.set('rejected');
+    this.rechazadoAp.set(true);
+    // Al rechazar, la verificación se revierte: solo queda el hito de elaboración.
+    this.fechaVerificacion.set('');
+    setTimeout(() => this.snackbarRechazadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarRechazadoVisible.set(false), 300 + 5000);
   }
 
   /** Confirma la validación: la solicitud pasa a «Validado», registra el hito y avisa. */
