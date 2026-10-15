@@ -90,7 +90,13 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
-        } @else if (revisionAprobador() && !validado() && !observadoAp() && !rechazadoAp()) {
+        } @else if (revisionFinal() && !aceptadoAp() && !observadoAp() && !rechazadoAp()) {
+          <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
+            <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
+            <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
+            <siaf-button variant="accent" size="md" icon="task_alt" (click)="modalAceptarAp.set(true)">Aceptar</siaf-button>
+          </div>
+        } @else if (revisionAprobador() && !revisionFinal() && !validado() && !observadoAp() && !rechazadoAp()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
             <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
             <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
@@ -136,12 +142,12 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             </div>
           </siaf-solicitude-form-card>
 
-          @if (validado()) {
-            <siaf-detail-history-tabs [comentario]="comentarioEvaluacion()" [entries]="historialEvaluacion()" />
-          } @else if (observadoAp()) {
+          @if (observadoAp()) {
             <siaf-detail-history-tabs [comentario]="comentarioObservacionApObj()" [entries]="historialObservacionAp()" />
           } @else if (rechazadoAp()) {
             <siaf-detail-history-tabs [comentario]="comentarioRechazoApObj()" [entries]="historialRechazoAp()" />
+          } @else if (validado() || revisionFinal()) {
+            <siaf-detail-history-tabs [comentario]="comentarioEvaluacion()" [entries]="historialEvaluacion()" />
           }
         } @else if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
@@ -520,6 +526,19 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         />
       </siaf-modal>
 
+      <!-- Confirmación de aceptar la solicitud (aprobador). -->
+      <siaf-modal
+        [open]="modalAceptarAp()"
+        variant="verify"
+        title="¿Aceptar solicitud?"
+        description="La solicitud será aceptada."
+        confirmLabel="Aceptar"
+        [showIllustration]="true"
+        (confirmed)="confirmarAceptarAp()"
+        (canceled)="modalAceptarAp.set(false)"
+        (closed)="modalAceptarAp.set(false)"
+      />
+
       <!-- Confirmación de grabado del documento. -->
       <siaf-modal
         [open]="modalGrabar()"
@@ -624,6 +643,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar [open]="snackbarRechazadoVisible()" variant="creation-rejected" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarRechazadoVisible.set(false)" />
       </div>
 
+      <!-- Aviso de solicitud aceptada. -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarAceptadoVisible()" variant="creation-accepted" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarAceptadoVisible.set(false)" />
+      </div>
+
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar
@@ -715,7 +739,7 @@ export class IndicadorDesempenoRequestComponent {
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
-  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted' | 'validated' | 'rejected'>('new');
+  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted' | 'validated' | 'rejected' | 'accepted'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
   readonly grabado = computed(() => this.estado() !== 'new');
   readonly esObservado = computed(() => this.estado() === 'observed');
@@ -729,7 +753,7 @@ export class IndicadorDesempenoRequestComponent {
     if (this.editandoObservado() || this.edicion() || this.subsanado()) return 'edit';
     // En el contexto observado se mantienen Eliminar/Editar/Verificar en todos los estados.
     if (this.desdeObservado()) return 'elaborated';
-    if (this.estado() === 'observed' || this.estado() === 'validated' || this.estado() === 'rejected') return 'elaborated';
+    if (['observed', 'validated', 'rejected', 'accepted'].includes(this.estado())) return 'elaborated';
     return this.estado();
   });
   readonly estadoDocumento = computed<FlowStatus>(() =>
@@ -738,6 +762,7 @@ export class IndicadorDesempenoRequestComponent {
       : this.estado() === 'deleted' ? 'Eliminado'
       : this.estado() === 'validated' ? 'Validado'
       : this.estado() === 'rejected' ? 'Rechazado'
+      : this.estado() === 'accepted' ? 'Aceptado'
       : 'Elaborado',
   );
   readonly numeroDocumento = signal('0001');
@@ -747,6 +772,12 @@ export class IndicadorDesempenoRequestComponent {
   readonly desdeObservado = signal(false);
   /** Revisión del aprobador (solicitud Verificada): botones Rechazar/Observar/Validar. */
   readonly revisionAprobador = signal(false);
+  /** Revisión final del aprobador (solicitud Validada): botones Rechazar/Observar/Aceptar. */
+  readonly revisionFinal = signal(false);
+  readonly modalAceptarAp = signal(false);
+  readonly snackbarAceptadoVisible = signal(false);
+  /** Tras aceptar la solicitud: oculta los botones del aprobador y marca el documento como Aceptado. */
+  readonly aceptadoAp = signal(false);
   readonly modalValidar = signal(false);
   readonly comentarioValidacion = signal('');
   /** Tras validar la solicitud: oculta los botones del aprobador y muestra el comentario de evaluación. */
@@ -863,16 +894,18 @@ export class IndicadorDesempenoRequestComponent {
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
   private readonly verificadorNombre = signal('JUAN DOE PEREZ PEREZ');
   private readonly validadorNombre = signal('LUIS RAMIREZ TORRES');
+  private readonly aceptadorNombre = signal('MARIA GONZALES ROJAS');
   private readonly fechaElaboracion = signal('');
   private readonly fechaVerificacion = signal('');
   private readonly fechaValidacion = signal('');
+  private readonly fechaAceptacion = signal('');
 
   // Trazabilidad: se van registrando los hitos a medida que avanza el documento.
   readonly trazabilidad = computed<ActionTrackerSummary[]>(() => [
     { label: 'Elaborado por', actionBy: this.elaboradorNombre, date: this.fechaElaboracion() },
     { label: 'Verificado por', actionBy: this.fechaVerificacion() ? this.verificadorNombre() : '', date: this.fechaVerificacion() },
     { label: 'Validado por', actionBy: this.fechaValidacion() ? this.validadorNombre() : '', date: this.fechaValidacion() },
-    { label: 'Aceptado por', actionBy: '', date: '' },
+    { label: 'Aceptado por', actionBy: this.fechaAceptacion() ? this.aceptadorNombre() : '', date: this.fechaAceptacion() },
   ]);
 
   constructor() {
@@ -883,6 +916,19 @@ export class IndicadorDesempenoRequestComponent {
       this.numeroDocumento.set(this.route.snapshot.queryParamMap.get('numero') || '0001');
       this.fechaElaboracion.set('19/08/2025 08:00:59');
       this.fechaVerificacion.set('22/08/2025 08:00:59');
+      this.registros.set([this.registroObservadoDemo()]);
+    }
+    // Abierta desde la Bandeja del aprobador (solicitud Validada): revisión final, botones Rechazar/Observar/Aceptar.
+    if (this.route.snapshot.queryParamMap.get('estado') === 'validado') {
+      this.revisionAprobador.set(true);
+      this.revisionFinal.set(true);
+      this.estado.set('validated');
+      this.numeroDocumento.set(this.route.snapshot.queryParamMap.get('numero') || '0001');
+      this.fechaElaboracion.set('19/08/2025 08:00:59');
+      this.fechaVerificacion.set('22/08/2025 08:00:59');
+      this.fechaValidacion.set('24/08/2025 08:00:59');
+      this.validadorNombre.set('LUIS RAMIREZ TORRES');
+      this.comentarioValidacion.set('Se validó la información registrada.');
       this.registros.set([this.registroObservadoDemo()]);
     }
     // Abierta desde la Bandeja en estado Observado: carga el registro, la trazabilidad y el comentario.
@@ -1106,6 +1152,16 @@ export class IndicadorDesempenoRequestComponent {
   cerrarModalRechazarAp(): void {
     this.modalRechazarAp.set(false);
     this.comentarioRechazoAp.set('');
+  }
+
+  /** Confirma la aceptación: la solicitud pasa a «Aceptado», registra el hito y avisa. */
+  confirmarAceptarAp(): void {
+    this.modalAceptarAp.set(false);
+    this.estado.set('accepted');
+    this.aceptadoAp.set(true);
+    this.fechaAceptacion.set('25/08/2025 08:00:59');
+    setTimeout(() => this.snackbarAceptadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarAceptadoVisible.set(false), 300 + 5000);
   }
 
   /** Confirma el rechazo: la solicitud pasa a «Rechazado», limpia la verificación y avisa. */
