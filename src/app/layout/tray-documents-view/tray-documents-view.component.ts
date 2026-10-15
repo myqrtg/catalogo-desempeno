@@ -168,7 +168,6 @@ type AppliedCustomFilter = {
                     <th class="w-[120px] px-siaf-md py-siaf-sm">Estado</th>
                     <th class="w-[200px] px-siaf-md py-siaf-sm">Sistema</th>
                     <th class="w-[120px] px-siaf-md py-siaf-sm">Fecha de re...</th>
-                    <th class="w-[131px] px-siaf-md py-siaf-sm">ID Entidad</th>
                     <th class="w-[286px] px-siaf-md py-siaf-sm">Entidad</th>
                     <th class="sticky right-0 w-14 rounded-r-siaf-sm bg-[var(--sys-color-bg-surfaces-surface-high)] px-siaf-sm py-siaf-sm"></th>
                   </tr>
@@ -185,7 +184,6 @@ type AppliedCustomFilter = {
                       </td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.system }}</td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.date }}</td>
-                      <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.institutionalScope }}</td>
                       <td class="px-siaf-md py-siaf-sm" [class.font-bold]="$index === 0">{{ row.entity }}</td>
                       <td class="sticky right-0 border-l border-[var(--sys-color-divider-strong)] bg-surface px-siaf-sm py-siaf-xs">
                         <button class="inline-flex size-8 items-center justify-center rounded-siaf-md transition hover:bg-surface-muted active:bg-[var(--sys-color-bg-states-light-pressed)]" type="button" aria-label="Historial" (click)="$event.stopPropagation()">
