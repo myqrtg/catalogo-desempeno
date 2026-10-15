@@ -89,7 +89,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
-        } @else if (revisionAprobador() && !validado()) {
+        } @else if (revisionAprobador() && !validado() && !observadoAp()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
             <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
             <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
@@ -137,6 +137,8 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
 
           @if (validado()) {
             <siaf-detail-history-tabs [comentario]="comentarioEvaluacion()" [entries]="historialEvaluacion()" />
+          } @else if (observadoAp()) {
+            <siaf-detail-history-tabs [comentario]="comentarioObservacionApObj()" [entries]="historialObservacionAp()" />
           }
         } @else if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
@@ -596,6 +598,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar [open]="snackbarValidadoVisible()" variant="creation-validated" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarValidadoVisible.set(false)" />
       </div>
 
+      <!-- Aviso de solicitud observada. -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarObservadoVisible()" variant="creation-observed" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarObservadoVisible.set(false)" />
+      </div>
+
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar
@@ -735,6 +742,12 @@ export class IndicadorDesempenoRequestComponent {
   ];
   readonly modalObservarAp = signal(false);
   readonly comentarioObservacionAp = signal('');
+  /** Tras observar la solicitud: oculta los botones del aprobador y muestra el comentario de observación. */
+  readonly observadoAp = signal(false);
+  readonly comentarioObservacionApObj = computed(() => ({
+    label: 'Comentario de observación',
+    texto: this.comentarioObservacionAp(),
+  }));
   /** Respuestas sugeridas para el comentario de observación del aprobador. */
   readonly sugerenciasObservacion = [
     'El diccionario de datos está incorrecto',
@@ -748,6 +761,7 @@ export class IndicadorDesempenoRequestComponent {
   readonly modalEliminarObservado = signal(false);
   readonly snackbarEliminadoDocVisible = signal(false);
   readonly snackbarValidadoVisible = signal(false);
+  readonly snackbarObservadoVisible = signal(false);
   /** Fila seleccionada en la tabla de edición (muestra editar/eliminar). */
   readonly obsFilaSeleccionada = signal(false);
   /** Tras subsanar la observación (editar una fila), se habilita «Grabar». */
@@ -778,6 +792,19 @@ export class IndicadorDesempenoRequestComponent {
       comentario: 'Comentario de evaluación',
       descripcion: this.comentarioValidacion(),
       fecha: '24/08/2025',
+      hora: '08:00:59',
+      rol: 'Evaluador',
+      usuario: 'Luis Ramirez Torres',
+    },
+  ]);
+  /** Historial del comentario de observación (pestaña «Historial» tras observar desde el aprobador). */
+  readonly historialObservacionAp = computed(() => [
+    {
+      iteracion: 1,
+      proceso: 'Observar Solicitud',
+      comentario: 'Comentario de la observación',
+      descripcion: this.comentarioObservacionAp(),
+      fecha: '19/08/2025',
       hora: '08:00:59',
       rol: 'Evaluador',
       usuario: 'Luis Ramirez Torres',
@@ -1015,9 +1042,15 @@ export class IndicadorDesempenoRequestComponent {
     this.comentarioObservacionAp.set('');
   }
 
-  /** Confirma la observación de la solicitud (aprobador). */
+  /** Confirma la observación: la solicitud pasa a «Observado», limpia la verificación y avisa. */
   confirmarObservarAp(): void {
-    this.cerrarModalObservarAp();
+    this.modalObservarAp.set(false);
+    this.estado.set('observed');
+    this.observadoAp.set(true);
+    // Al observar, la verificación se revierte: solo queda el hito de elaboración.
+    this.fechaVerificacion.set('');
+    setTimeout(() => this.snackbarObservadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarObservadoVisible.set(false), 300 + 5000);
   }
 
   /** Confirma la validación: la solicitud pasa a «Validado», registra el hito y avisa. */
