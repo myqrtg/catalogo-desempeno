@@ -63,6 +63,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         [breadcrumbs]="breadcrumbs"
         [role]="revisionAprobador() ? 'approver' : 'creator'"
         [state]="headerState()"
+        [showTag]="!revisionAprobador()"
         [heading]="heading"
         [secondaryText]="secondaryText()"
         verifyLabel="Verificar y enviar"
