@@ -17,6 +17,8 @@ export type SnackbarVariant =
   | 'modification-verified'
   | 'creation-approved'
   | 'modification-approved'
+  | 'creation-validated'
+  | 'modification-validated'
   | 'creation-observed'
   | 'modification-observed'
   | 'creation-rejected'
@@ -91,6 +93,14 @@ const SNACKBAR_PRESETS: Record<Exclude<SnackbarVariant, 'custom'>, SnackbarPrese
   'modification-approved': {
     requestType: 'modificación',
     requestAction: 'aprobado'
+  },
+  'creation-validated': {
+    requestType: 'creación',
+    requestAction: 'validado'
+  },
+  'modification-validated': {
+    requestType: 'modificación',
+    requestAction: 'validado'
   },
   'creation-observed': {
     requestType: 'creación',

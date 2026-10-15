@@ -13,12 +13,12 @@ import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status
 import { IconComponent } from '../../../../../shared/ui/icon/icon.component';
 import { ModalComponent } from '../../../../../shared/ui/modal/modal.component';
 import { TextFieldComponent } from '../../../../../shared/ui/text-field/text-field.component';
-import { TextAreaControlComponent } from '../../../../../shared/ui/text-area-control/text-area-control.component';
 import { SnackbarComponent } from '../../../../../shared/ui/snackbar/snackbar.component';
 import { TooltipDirective } from '../../../../../shared/ui/tooltip/tooltip.directive';
 import { NOMBRE_DOCUMENTO, ORGANO_RECTOR, PROCESS_LABEL, PROCESS_ROUTE } from '../../config/indicadores-desempeno.rutas';
 import { IndicadorDesempenoDetalleComponent, IndicadorDetalleResumen } from './indicador-desempeno-detalle.component';
 import { IndicadorDesempenoDetalleVistaComponent } from './indicador-desempeno-detalle-vista.component';
+import { TextAutocompleteComponent } from './text-autocomplete.component';
 import { CatalogColumn, CatalogRow, CatalogSelectionModalComponent } from './catalog-selection-modal.component';
 import { INDICADORES_DEMO, IndicadorDemo } from './indicadores-demo';
 
@@ -47,7 +47,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     IconComponent,
     ModalComponent,
     TextFieldComponent,
-    TextAreaControlComponent,
+    TextAutocompleteComponent,
     CatalogSelectionModalComponent,
     SnackbarComponent,
     TooltipDirective,
@@ -89,7 +89,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
             <siaf-button variant="secondary" size="md" icon="save" [disabled]="!subsanado()" (click)="modalGrabar.set(true)">Grabar</siaf-button>
             <siaf-button size="md" icon="task_alt" [disabled]="true">Verificar y enviar</siaf-button>
           </div>
-        } @else if (revisionAprobador()) {
+        } @else if (revisionAprobador() && !validado()) {
           <div actions class="flex flex-wrap items-center justify-end gap-siaf-sm">
             <siaf-button variant="secondary" size="md" icon="content_paste_off" (click)="modalRechazarAp.set(true)">Rechazar</siaf-button>
             <siaf-button variant="secondary" size="md" icon="assignment_late" (click)="modalObservarAp.set(true)">Observar</siaf-button>
@@ -134,6 +134,10 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
               <span>1-{{ registros().length }} de {{ registros().length }}</span>
             </div>
           </siaf-solicitude-form-card>
+
+          @if (validado()) {
+            <siaf-detail-history-tabs [comentario]="comentarioEvaluacion()" [entries]="historialEvaluacion()" />
+          }
         } @else if (desdeObservado() && editandoObservado()) {
           <siaf-solicitude-form-card title="Registro de indicador de desempeño">
             <div card-actions class="flex items-center gap-siaf-sm">
@@ -459,16 +463,36 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (canceled)="cerrarModalValidar()"
         (closed)="cerrarModalValidar()"
       >
-        <text-area-control placeholder="Comentarios de evaluación" [maxlength]="200" [value]="comentarioValidacion()" (valueChange)="comentarioValidacion.set($event)" />
+        <siaf-text-autocomplete
+          [multiline]="true"
+          placeholder="Comentarios de evaluación"
+          [maxlength]="200"
+          [suggestions]="sugerenciasValidacion"
+          [value]="comentarioValidacion()"
+          (valueChange)="comentarioValidacion.set($event)"
+        />
       </siaf-modal>
       <siaf-modal
         [open]="modalObservarAp()"
-        variant="observe"
-        [showIllustration]="true"
-        (confirmed)="modalObservarAp.set(false)"
-        (canceled)="modalObservarAp.set(false)"
-        (closed)="modalObservarAp.set(false)"
-      />
+        variant="custom"
+        title="¿Observar solicitud?"
+        description="La solicitud será observada."
+        confirmLabel="Aceptar"
+        [confirmDisabled]="!comentarioObservacionAp().trim()"
+        (confirmed)="confirmarObservarAp()"
+        (canceled)="cerrarModalObservarAp()"
+        (closed)="cerrarModalObservarAp()"
+      >
+        <siaf-text-autocomplete
+          [multiline]="true"
+          placeholder="Comentario de la observación"
+          [required]="true"
+          [maxlength]="200"
+          [suggestions]="sugerenciasObservacion"
+          [value]="comentarioObservacionAp()"
+          (valueChange)="comentarioObservacionAp.set($event)"
+        />
+      </siaf-modal>
       <siaf-modal
         [open]="modalRechazarAp()"
         variant="reject"
@@ -567,6 +591,11 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         <siaf-snackbar [open]="snackbarEliminadoDocVisible()" variant="creation-deleted" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarEliminadoDocVisible.set(false)" />
       </div>
 
+      <!-- Aviso de solicitud validada. -->
+      <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
+        <siaf-snackbar [open]="snackbarValidadoVisible()" variant="creation-validated" [requestType]="tipoSolicitud()" [requestNumber]="numeroDocumento()" (closed)="snackbarValidadoVisible.set(false)" />
+      </div>
+
       <!-- Aviso de registro eliminado (aparece tras confirmar el borrado). -->
       <div class="fixed bottom-6 left-1/2 z-[60] -translate-x-1/2">
         <siaf-snackbar
@@ -658,7 +687,7 @@ export class IndicadorDesempenoRequestComponent {
   private correlativo = 23; // el primer registro queda como 0024, según el diseño
 
   // Estado del documento: «new» (Nuevo) → «elaborated» (Elaborado) → «verified» (Verificado).
-  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted'>('new');
+  readonly estado = signal<'new' | 'elaborated' | 'verified' | 'observed' | 'deleted' | 'validated'>('new');
   readonly elaborado = computed(() => this.estado() === 'elaborated');
   readonly grabado = computed(() => this.estado() !== 'new');
   readonly esObservado = computed(() => this.estado() === 'observed');
@@ -672,12 +701,14 @@ export class IndicadorDesempenoRequestComponent {
     if (this.editandoObservado() || this.edicion() || this.subsanado()) return 'edit';
     // En el contexto observado se mantienen Eliminar/Editar/Verificar en todos los estados.
     if (this.desdeObservado()) return 'elaborated';
-    return this.estado() === 'observed' ? 'elaborated' : this.estado();
+    if (this.estado() === 'observed' || this.estado() === 'validated') return 'elaborated';
+    return this.estado();
   });
   readonly estadoDocumento = computed<FlowStatus>(() =>
     this.estado() === 'verified' ? 'Verificado'
       : this.estado() === 'observed' ? 'Observado'
       : this.estado() === 'deleted' ? 'Eliminado'
+      : this.estado() === 'validated' ? 'Validado'
       : 'Elaborado',
   );
   readonly numeroDocumento = signal('0001');
@@ -689,12 +720,34 @@ export class IndicadorDesempenoRequestComponent {
   readonly revisionAprobador = signal(false);
   readonly modalValidar = signal(false);
   readonly comentarioValidacion = signal('');
+  /** Tras validar la solicitud: oculta los botones del aprobador y muestra el comentario de evaluación. */
+  readonly validado = signal(false);
+  readonly comentarioEvaluacion = computed(() => ({
+    label: 'Comentario de evaluación',
+    texto: this.comentarioValidacion(),
+  }));
+  /** Respuestas sugeridas para el comentario de evaluación del aprobador. */
+  readonly sugerenciasValidacion = [
+    'Se validó la información registrada.',
+    'Se validó la información registrada y cumple con los criterios establecidos.',
+    'La información del indicador es correcta y consistente.',
+    'Se verificó la consistencia de los datos del indicador.',
+  ];
   readonly modalObservarAp = signal(false);
+  readonly comentarioObservacionAp = signal('');
+  /** Respuestas sugeridas para el comentario de observación del aprobador. */
+  readonly sugerenciasObservacion = [
+    'El diccionario de datos está incorrecto',
+    'La información registrada no coincide con el sustento adjunto',
+    'Falta completar la justificación del indicador',
+    'Revisar el programa presupuestal y el producto asociados',
+  ];
   readonly modalRechazarAp = signal(false);
   /** «Edición»: tras pulsar Editar se muestra la tabla con herramientas (+, buscar, editar/eliminar fila). */
   readonly edicion = signal(false);
   readonly modalEliminarObservado = signal(false);
   readonly snackbarEliminadoDocVisible = signal(false);
+  readonly snackbarValidadoVisible = signal(false);
   /** Fila seleccionada en la tabla de edición (muestra editar/eliminar). */
   readonly obsFilaSeleccionada = signal(false);
   /** Tras subsanar la observación (editar una fila), se habilita «Grabar». */
@@ -717,16 +770,31 @@ export class IndicadorDesempenoRequestComponent {
       usuario: 'Karim Lucano Lara',
     },
   ];
+  /** Historial del comentario de evaluación (pestaña «Historial» tras validar). */
+  readonly historialEvaluacion = computed(() => [
+    {
+      iteracion: 1,
+      proceso: 'Validar Solicitud',
+      comentario: 'Comentario de evaluación',
+      descripcion: this.comentarioValidacion(),
+      fecha: '24/08/2025',
+      hora: '08:00:59',
+      rol: 'Evaluador',
+      usuario: 'Luis Ramirez Torres',
+    },
+  ]);
   private readonly elaboradorNombre = 'JUAN DOE PEREZ PEREZ';
   private readonly verificadorNombre = signal('JUAN DOE PEREZ PEREZ');
+  private readonly validadorNombre = signal('LUIS RAMIREZ TORRES');
   private readonly fechaElaboracion = signal('');
   private readonly fechaVerificacion = signal('');
+  private readonly fechaValidacion = signal('');
 
   // Trazabilidad: se van registrando los hitos a medida que avanza el documento.
   readonly trazabilidad = computed<ActionTrackerSummary[]>(() => [
     { label: 'Elaborado por', actionBy: this.elaboradorNombre, date: this.fechaElaboracion() },
     { label: 'Verificado por', actionBy: this.fechaVerificacion() ? this.verificadorNombre() : '', date: this.fechaVerificacion() },
-    { label: 'Validado por', actionBy: '', date: '' },
+    { label: 'Validado por', actionBy: this.fechaValidacion() ? this.validadorNombre() : '', date: this.fechaValidacion() },
     { label: 'Aceptado por', actionBy: '', date: '' },
   ]);
 
@@ -942,9 +1010,24 @@ export class IndicadorDesempenoRequestComponent {
     this.comentarioValidacion.set('');
   }
 
-  /** Confirma la validación de la solicitud (aprobador). */
+  cerrarModalObservarAp(): void {
+    this.modalObservarAp.set(false);
+    this.comentarioObservacionAp.set('');
+  }
+
+  /** Confirma la observación de la solicitud (aprobador). */
+  confirmarObservarAp(): void {
+    this.cerrarModalObservarAp();
+  }
+
+  /** Confirma la validación: la solicitud pasa a «Validado», registra el hito y avisa. */
   confirmarValidar(): void {
-    this.cerrarModalValidar();
+    this.modalValidar.set(false);
+    this.estado.set('validated');
+    this.validado.set(true);
+    this.fechaValidacion.set('24/08/2025 08:00:59');
+    setTimeout(() => this.snackbarValidadoVisible.set(true), 300);
+    setTimeout(() => this.snackbarValidadoVisible.set(false), 300 + 5000);
   }
 
   /** Confirma el borrado: la solicitud pasa a «Eliminado», sale de edición y avisa. */
