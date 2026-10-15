@@ -31,6 +31,9 @@ export type EstadoDocumento = (typeof ESTADOS_DOCUMENTO)[number];
 export const ESTADO = {
   ELABORADO: 'Elaborado',
   VERIFICADO: 'Verificado',
+  // Estado de UI para el flujo de indicadores de desempeño: lo que el Evaluador valida y queda
+  // pendiente de aprobación. No existe en el enum del backend (reusa el flujo genérico).
+  VALIDADO: 'Validado',
   APROBADO: 'Aprobado',
   RECHAZADO: 'Rechazado',
   OBSERVADO: 'Observado',

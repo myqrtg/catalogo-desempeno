@@ -12,6 +12,7 @@ import { TableControlsComponent } from '../../shared/components/table-controls/t
 import { SolicitudesStateService, SolicitudDemo } from '../../core/state/solicitudes-state.service';
 import { SolicitudesFacadeService } from '../../core/state/solicitudes-facade.service';
 import { PermissionService } from '../../core/auth/permission.service';
+import { CurrentUserService } from '../../core/auth/current-user.service';
 import { TooltipDirective } from '../../shared/ui/tooltip/tooltip.directive';
 import { ESTADO, ESTADOS_RESPUESTA_APROBADOR } from '../../core/models/documento.model';
 
@@ -26,7 +27,7 @@ type TrayDocumentRow = {
   entity: string;
 };
 
-type TrayDocumentStatus = 'Elaborado' | 'Verificado' | 'Eliminado' | 'Aprobado' | 'Observado' | 'Rechazado';
+type TrayDocumentStatus = 'Elaborado' | 'Verificado' | 'Validado' | 'Eliminado' | 'Aprobado' | 'Observado' | 'Rechazado';
 type TrayTitle = 'Recibidos' | 'Enviados' | 'Borradores' | 'Papelera' | string;
 
 type AppliedCustomFilter = {
@@ -239,6 +240,22 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
   private readonly solicitudesState = inject(SolicitudesStateService);
   private readonly solicitudesFacade = inject(SolicitudesFacadeService);
   private readonly permissionService = inject(PermissionService);
+  private readonly currentUser = inject(CurrentUserService);
+
+  /**
+   * Distingue al Aprobador del Evaluador: ambos usan el rol interno «approver», pero el Aprobador
+   * trabaja sobre solicitudes ya validadas por el Evaluador. En esta demo, los mismos documentos que
+   * el Evaluador ve como «Verificado» el Aprobador los ve como «Validado».
+   */
+  private get esAprobador(): boolean {
+    return (this.currentUser.user().perfilFuncional ?? '').toLowerCase().startsWith('aprobador');
+  }
+
+  /** Clave de la matriz de estados por sección: creador, evaluador (approver) o aprobador. */
+  private get roleKey(): 'creator' | 'approver' | 'aprobador' {
+    if (this.esAprobador) return 'aprobador';
+    return this.permissionService.currentRole() === 'approver' ? 'approver' : 'creator';
+  }
 
   @Input() title = 'Borradores';
 
@@ -315,19 +332,30 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
       Recibidos: [ESTADO.VERIFICADO],
       Enviados:  ESTADOS_RESPUESTA_APROBADOR,
     },
+    // El Aprobador recibe las solicitudes ya validadas por el Evaluador; en los datos siguen como
+    // «Verificado» y se muestran como «Validado» (ver `estadoVista`).
+    aprobador: {
+      Recibidos: [ESTADO.VERIFICADO],
+      Enviados:  ESTADOS_RESPUESTA_APROBADOR,
+    },
   };
 
+  /** Estado tal como lo ve el usuario actual: para el Aprobador, «Verificado» se muestra como «Validado». */
+  private estadoVista(estado: TrayDocumentStatus): TrayDocumentStatus {
+    return this.esAprobador && estado === ESTADO.VERIFICADO ? ESTADO.VALIDADO : estado;
+  }
+
   get statusFilterOptions(): TrayDocumentStatus[] {
-    const role = this.permissionService.currentRole();
-    const roleKey = role === 'approver' ? 'approver' : 'creator';
-    return this.SECTION_STATES[roleKey][this.title] ?? [];
+    const estados = this.SECTION_STATES[this.roleKey][this.title] ?? [];
+    return estados.map((e) => this.estadoVista(e));
   }
 
   readonly actionTypeFilterOptions = ['Creacion'];
 
-  /** Pendientes primero: Observado/Rechazado arriba en Recibidos del creador; Verificado arriba para el aprobador. */
+  /** Pendientes primero: Observado/Rechazado arriba en Recibidos del creador; Verificado/Validado arriba para el revisor. */
   private readonly STATUS_PRIORITY_BY_ROLE: Record<string, Record<string, number>> = {
     approver: { Verificado: 0, Observado: 1, Aprobado: 2, Rechazado: 3 },
+    aprobador: { Validado: 0, Observado: 1, Aprobado: 2, Rechazado: 3 },
     creator:  { Observado: 0, Rechazado: 1, Elaborado: 2, Verificado: 3, Aprobado: 4, Eliminado: 5 },
   };
 
@@ -346,8 +374,7 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
 
     // Pendientes primero según el rol (cuando no hay filtro de estado explícito)
     if (!this.selectedStatusFilter) {
-      const role = this.permissionService.currentRole();
-      const priority = this.STATUS_PRIORITY_BY_ROLE[role] ?? {};
+      const priority = this.STATUS_PRIORITY_BY_ROLE[this.roleKey] ?? {};
       const fallback = 99;
       return [...filtered].sort((a, b) => (priority[a.status] ?? fallback) - (priority[b.status] ?? fallback));
     }
@@ -387,12 +414,11 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
 
   get rowsForCurrentTray(): TrayDocumentRow[] {
     const role = this.permissionService.currentRole();
-    const roleKey = role === 'approver' ? 'approver' : 'creator';
     const solicitudes = role === 'approver'
       ? this.solicitudesState.bandejaAprobador()
       : this.solicitudesState.bandejaCreador();
 
-    const allowedStates = this.SECTION_STATES[roleKey][this.title];
+    const allowedStates = this.SECTION_STATES[this.roleKey][this.title];
     const filtered = allowedStates
       ? solicitudes.filter(s => allowedStates.includes(s.estado as TrayDocumentStatus))
       : solicitudes;
@@ -406,7 +432,7 @@ export class TrayDocumentsViewComponent implements OnInit, OnChanges {
       document: s.tipoDocumento,
       number: s.numero || '-',
       actionType: this.etiquetaTipoAccion(s.tipoAccion),
-      status: s.estado as TrayDocumentStatus,
+      status: this.estadoVista(s.estado as TrayDocumentStatus),
       system: esIndicadores ? 'Presupuesto' : 'Sistema Nacional de Contabilidad',
       date: s.fecha,
       institutionalScope: s.cuentas[0]?.institutionalScopes || '-',

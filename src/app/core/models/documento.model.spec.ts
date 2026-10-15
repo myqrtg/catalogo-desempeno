@@ -10,6 +10,7 @@ describe('ESTADO (etiquetas de UI)', () => {
     expect(ESTADO).toEqual({
       ELABORADO: 'Elaborado',
       VERIFICADO: 'Verificado',
+      VALIDADO: 'Validado',
       APROBADO: 'Aprobado',
       RECHAZADO: 'Rechazado',
       OBSERVADO: 'Observado',
@@ -17,13 +18,15 @@ describe('ESTADO (etiquetas de UI)', () => {
     });
   });
 
-  it('cubre todos los estados del backend salvo NUEVO, que es interno', () => {
+  it('cubre todos los estados del backend salvo NUEVO, más VALIDADO (solo de UI)', () => {
     // NUEVO no se muestra: el documento nace ahí y solo al guardar pasa a
     // ELABORADO. Ver el filtro `esVisible` del facade.
+    // VALIDADO es un estado solo de UI del flujo de indicadores de desempeño:
+    // no existe en el enum del backend, por eso se agrega aquí.
     const delBackend = ESTADOS_DOCUMENTO.filter(e => e !== 'NUEVO');
     const deLaUi = Object.keys(ESTADO);
 
-    expect(deLaUi.sort()).toEqual([...delBackend].sort());
+    expect(deLaUi.sort()).toEqual([...delBackend, 'VALIDADO'].sort());
   });
 
   it('cada etiqueta es la versión capitalizada de su clave', () => {
