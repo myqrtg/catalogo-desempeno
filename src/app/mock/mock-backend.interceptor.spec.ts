@@ -114,7 +114,7 @@ describe('mockBackendInterceptor', () => {
 
     const registros = esperar(http.get<CuentaBancariaRegistro[]>(`${API}/cuentas-bancarias`, { headers: luis }));
     const cuenta = registros.valor?.find((r) => r.documentoId === id);
-    expect(cuenta?.codigo).toBe('CB-0009');
+    expect(cuenta?.codigo).toBe('CB-0004');
     expect(cuenta?.numeroCuenta).toBe(CUENTA.numeroCuenta);
 
     const detalle = esperar(http.get<SolicitudResponse>(`${API}/solicitudes/${id}`, { headers: luis }));

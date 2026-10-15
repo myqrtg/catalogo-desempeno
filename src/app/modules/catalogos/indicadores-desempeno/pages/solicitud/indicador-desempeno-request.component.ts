@@ -438,6 +438,8 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
       <siaf-modal
         [open]="modalEliminarObservado()"
         variant="delete-record"
+        title="¿Eliminar documento?"
+        description="El documento será eliminado."
         [showIllustration]="true"
         (confirmed)="confirmarEliminarObservado()"
         (canceled)="modalEliminarObservado.set(false)"
