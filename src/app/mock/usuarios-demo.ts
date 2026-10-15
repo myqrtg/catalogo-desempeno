@@ -4,8 +4,9 @@ import type { PerfilItem } from '../core/api/auth-api.service';
  * Usuarios de demostración del taller. Entran con su DNI y la contraseña común.
  *
  * - Ana (creador) registra y verifica solicitudes.
- * - Luis (aprobador) aprueba, observa o rechaza lo verificado.
- * - Carla tiene los dos perfiles: sirve para mostrar el cambio de perfil desde el menú del usuario.
+ * - Luis (evaluador) valida, observa o rechaza lo verificado.
+ * - María (aprobador) aprueba lo validado por el evaluador.
+ * - Carla tiene dos perfiles: sirve para mostrar el cambio de perfil desde el menú del usuario.
  *
  * Son datos de ejemplo: no hay contraseñas reales ni se validan contra un servidor.
  */
@@ -73,6 +74,18 @@ export const USUARIOS_DEMO: UsuarioDemo[] = [
     oficina: 'DCGP',
     descripcion: 'Evaluador: valida, observa o rechaza',
     perfiles: [perfil('perfil-luis-aprobador', 'APROBADOR', 'Evaluador', 'Evaluador de indicadores de desempeño')],
+  },
+  {
+    id: 'usr-maria',
+    dni: '44444444',
+    email: 'maria.gonzales@taller.pe',
+    nombres: 'Maria',
+    apellidoPaterno: 'Gonzales',
+    apellidoMaterno: 'Rojas',
+    nombre: 'Maria Gonzales Rojas',
+    oficina: 'DCGP',
+    descripcion: 'Aprobador: aprueba lo validado por el evaluador',
+    perfiles: [perfil('perfil-maria-aprobador', 'APROBADOR', 'Aprobador', 'Aprobador de indicadores de desempeño')],
   },
   {
     id: 'usr-carla',
