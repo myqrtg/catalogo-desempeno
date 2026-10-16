@@ -526,18 +526,28 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         />
       </siaf-modal>
 
-      <!-- Confirmación de aceptar la solicitud (aprobador). -->
+      <!-- Confirmación de aceptar la solicitud (aprobador): genera la constancia de aceptación. -->
       <siaf-modal
         [open]="modalAceptarAp()"
-        variant="verify"
-        title="¿Aceptar solicitud?"
-        description="La solicitud será aceptada."
+        variant="custom"
+        [title]="'¿Aceptar ' + tipoSolicitud() + ' del catálogo de indicadores de desempeño?'"
+        description="La solicitud será aceptada y se generará la constancia de aceptación."
         confirmLabel="Aceptar"
-        [showIllustration]="true"
+        [confirmDisabled]="!comentarioAceptacion().trim()"
         (confirmed)="confirmarAceptarAp()"
-        (canceled)="modalAceptarAp.set(false)"
-        (closed)="modalAceptarAp.set(false)"
-      />
+        (canceled)="cerrarModalAceptarAp()"
+        (closed)="cerrarModalAceptarAp()"
+      >
+        <siaf-text-autocomplete
+          [multiline]="true"
+          placeholder="Comentario de determinación de la aceptación"
+          [required]="true"
+          [maxlength]="1000"
+          [suggestions]="sugerenciasAceptacion"
+          [value]="comentarioAceptacion()"
+          (valueChange)="comentarioAceptacion.set($event)"
+        />
+      </siaf-modal>
 
       <!-- Confirmación de grabado del documento. -->
       <siaf-modal
@@ -775,6 +785,13 @@ export class IndicadorDesempenoRequestComponent {
   /** Revisión final del aprobador (solicitud Validada): botones Rechazar/Observar/Aceptar. */
   readonly revisionFinal = signal(false);
   readonly modalAceptarAp = signal(false);
+  readonly comentarioAceptacion = signal('');
+  /** Comentarios de determinación de la aceptación sugeridos. */
+  readonly sugerenciasAceptacion = [
+    'La información registrada se encuentra correcta.',
+    'La información registrada cumple con los criterios de aceptación.',
+    'Se verificó la consistencia de los datos y se aprueba el registro.',
+  ];
   readonly snackbarAceptadoVisible = signal(false);
   /** Tras aceptar la solicitud: oculta los botones del aprobador y marca el documento como Aceptado. */
   readonly aceptadoAp = signal(false);
@@ -1152,6 +1169,11 @@ export class IndicadorDesempenoRequestComponent {
   cerrarModalRechazarAp(): void {
     this.modalRechazarAp.set(false);
     this.comentarioRechazoAp.set('');
+  }
+
+  cerrarModalAceptarAp(): void {
+    this.modalAceptarAp.set(false);
+    this.comentarioAceptacion.set('');
   }
 
   /** Confirma la aceptación: la solicitud pasa a «Aceptado», registra el hito y avisa. */
