@@ -106,7 +106,7 @@ import { ADMIN_MENU_TREE, DEFAULT_PROCESS_TREE } from '../../shared/utils/proces
         [class.lg:pl-[364px]]="trayMenuOpen"
         [class.lg:pl-[434px]]="processMenuOpen || createDocumentOpen || adminMenuOpen"
       >
-        @if (trayContentOpen) {
+        @if (trayContentOpen()) {
           @if (selectedTrayItem === 'Notificaciones') {
             <siaf-tray-notifications-view />
           } @else {
@@ -145,7 +145,8 @@ export class AppShellComponent implements OnInit {
   activeNavigation: SidebarNavigation = 'Panel';
   processMenuOpen = false;
   trayMenuOpen = false;
-  trayContentOpen = false;
+  /** Señal para que el cambio tras `NavigationEnd` (dentro de una suscripción) re-renderice en OnPush. */
+  readonly trayContentOpen = signal(false);
   mobileNavigationOpen = false;
   selectedTrayItem = 'Borradores';
   createDocumentOpen = false;
@@ -246,7 +247,7 @@ export class AppShellComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((event) => {
-        this.trayContentOpen = false;
+        this.trayContentOpen.set(false);
         this.closeFloatingPanels();
         this.syncNavigationWithUrl(event.urlAfterRedirects);
       });
@@ -263,7 +264,7 @@ export class AppShellComponent implements OnInit {
   onNavigationChange(navigation: SidebarNavigation): void {
     if (navigation === 'Panel') {
       this.activeNavigation = 'Panel';
-      this.trayContentOpen = false;
+      this.trayContentOpen.set(false);
       this.closeFloatingPanels();
       void this.router.navigate(['/panel']);
       return;
@@ -303,7 +304,7 @@ export class AppShellComponent implements OnInit {
     this.activeNavigation = 'Proceso';
     this.processMenuOpen = true;
     this.trayMenuOpen = false;
-    this.trayContentOpen = false;
+    this.trayContentOpen.set(false);
     this.createDocumentOpen = false;
   }
 
@@ -316,7 +317,7 @@ export class AppShellComponent implements OnInit {
     this.mobileNavigationOpen = false;
     this.processMenuOpen = false;
     this.trayMenuOpen = false;
-    this.trayContentOpen = false;
+    this.trayContentOpen.set(false);
     this.createDocumentOpen = true;
   }
 
@@ -341,7 +342,7 @@ export class AppShellComponent implements OnInit {
     this.selectedTrayItem = item;
     this.activeNavigation = 'Bandeja';
     this.trayMenuOpen = this.isDesktopViewport();
-    this.trayContentOpen = true;
+    this.trayContentOpen.set(true);
   }
 
   onProcessNodeSelected(node: ProcessMenuNode): void {
