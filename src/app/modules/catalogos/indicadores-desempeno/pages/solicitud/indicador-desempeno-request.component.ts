@@ -498,7 +498,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           [multiline]="true"
           placeholder="Comentario de la observación"
           [required]="true"
-          [maxlength]="200"
+          [maxlength]="revisionFinal() ? 300 : 200"
           [suggestions]="sugerenciasObservacion"
           [value]="comentarioObservacionAp()"
           (valueChange)="comentarioObservacionAp.set($event)"
@@ -1155,13 +1155,14 @@ export class IndicadorDesempenoRequestComponent {
     this.comentarioObservacionAp.set('');
   }
 
-  /** Confirma la observación: la solicitud pasa a «Observado», limpia la verificación y avisa. */
+  /** Confirma la observación: la solicitud pasa a «Observado» y avisa. */
   confirmarObservarAp(): void {
     this.modalObservarAp.set(false);
     this.estado.set('observed');
     this.observadoAp.set(true);
-    // Al observar, la verificación se revierte: solo queda el hito de elaboración.
-    this.fechaVerificacion.set('');
+    // El evaluador observa una verificada: la verificación se revierte. El aprobador observa una
+    // validada: conserva verificación y validación (solo agrega la observación).
+    if (!this.revisionFinal()) this.fechaVerificacion.set('');
     setTimeout(() => this.snackbarObservadoVisible.set(true), 300);
     setTimeout(() => this.snackbarObservadoVisible.set(false), 300 + 5000);
   }
@@ -1186,13 +1187,14 @@ export class IndicadorDesempenoRequestComponent {
     setTimeout(() => this.snackbarAceptadoVisible.set(false), 300 + 5000);
   }
 
-  /** Confirma el rechazo: la solicitud pasa a «Rechazado», limpia la verificación y avisa. */
+  /** Confirma el rechazo: la solicitud pasa a «Rechazado» y avisa. */
   confirmarRechazarAp(): void {
     this.modalRechazarAp.set(false);
     this.estado.set('rejected');
     this.rechazadoAp.set(true);
-    // Al rechazar, la verificación se revierte: solo queda el hito de elaboración.
-    this.fechaVerificacion.set('');
+    // El evaluador rechaza una verificada: la verificación se revierte. El aprobador rechaza una
+    // validada: conserva verificación y validación.
+    if (!this.revisionFinal()) this.fechaVerificacion.set('');
     setTimeout(() => this.snackbarRechazadoVisible.set(true), 300);
     setTimeout(() => this.snackbarRechazadoVisible.set(false), 300 + 5000);
   }
