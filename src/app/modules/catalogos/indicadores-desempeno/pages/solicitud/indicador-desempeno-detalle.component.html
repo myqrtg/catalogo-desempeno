@@ -245,8 +245,8 @@
   <!-- ── VIGENCIA EN PROCESOS ── -->
   <div class="flex flex-col gap-siaf-md">
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Vigencia en procesos</h3>
-    <siaf-radio-group label="Programación (P)" name="programacion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="programacion()" />
-    <siaf-radio-group label="Gestión (G)" name="gestion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="gestion()" />
+    <siaf-radio-group label="Programación (P)" name="programacion" [inline]="true" [required]="true" [disabled]="bloqueado('otros')" [options]="opcSiNo" [value]="programacion()" (valueChange)="programacion.set($event)" />
+    <siaf-radio-group label="Gestión (G)" name="gestion" [inline]="true" [required]="true" [disabled]="bloqueado('otros')" [options]="opcSiNo" [value]="gestion()" (valueChange)="gestion.set($event)" />
     <siaf-radio-group label="Evaluación (E)" name="evaluacion" [inline]="true" [required]="true" [disabled]="true" [options]="opcSiNo" [value]="evaluacion()" />
   </div>
 

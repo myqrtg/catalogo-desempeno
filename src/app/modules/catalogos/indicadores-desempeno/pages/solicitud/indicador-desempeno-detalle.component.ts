@@ -421,8 +421,8 @@ export class IndicadorDesempenoDetalleComponent {
   readonly panelSustento = signal(false);
 
   // ── Vigencia en procesos ──────────────────────────────────────────
-  readonly programacion = signal('NO'); // fija en «No» y deshabilitada (regla de negocio).
-  readonly gestion = signal('NO'); // fija en «No» y deshabilitada (regla de negocio).
+  readonly programacion = signal('SI'); // Programación (P): editable; por defecto «Sí».
+  readonly gestion = signal('SI'); // Gestión (G): editable; por defecto «Sí».
   readonly evaluacion = signal('NO'); // Evaluación (E): fija en «No» y deshabilitada (regla de negocio).
 
   // ── Medición y Vigencia (prellenadas de ejemplo; se asignan al aceptar) ──

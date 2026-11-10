@@ -7,6 +7,7 @@ import { SolicitudePageLayoutComponent } from '../../../../../shared/components/
 import { BreadcrumbItem } from '../../../../../shared/components/breadcrumb/breadcrumb.component';
 import { ActionTrackerComponent, ActionTrackerSummary } from '../../../../../shared/ui/action-tracker/action-tracker.component';
 import { DetailHistoryTabsComponent } from '../../../../../shared/components/detail-history-tabs/detail-history-tabs.component';
+import { AlertComponent } from '../../../../../shared/ui/alert/alert.component';
 import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 import { DocumentSummaryCardComponent } from '../../../../../shared/ui/document-summary-card/document-summary-card.component';
 import { FlowStatus } from '../../../../../shared/ui/flow-status-tag/flow-status-tag.component';
@@ -43,6 +44,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
     ActionTrackerComponent,
     DetailHistoryTabsComponent,
     DocumentSummaryCardComponent,
+    AlertComponent,
     ButtonComponent,
     IconComponent,
     ModalComponent,
@@ -75,7 +77,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
         (canceled)="onCancelarLayout()"
         (saved)="modalGrabar.set(true)"
         (edited)="editar()"
-        (verified)="modalVerificar.set(true)"
+        (verified)="intentarVerificar()"
         (deleted)="modalEliminarObservado.set(true)"
       >
         @if (editandoObservado()) {
@@ -110,6 +112,15 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           </section>
         } @else {
           <siaf-solicitude-info-card [fields]="camposCabecera" [captureOpenDate]="true" />
+        }
+
+        @if (alertaAE27()) {
+          <siaf-alert
+            tone="error"
+            description="El Indicador de Desempeño debe estar vigente en Programación o en Gestión."
+            [showClose]="true"
+            (closed)="alertaAE27.set(false)"
+          />
         }
 
         @if (revisionAprobador()) {
@@ -741,6 +752,8 @@ export class IndicadorDesempenoRequestComponent {
   readonly modalEliminar = signal(false);
   readonly modalGrabar = signal(false);
   readonly modalVerificar = signal(false);
+  /** Alerta AE-27: el indicador debe estar vigente en Programación o en Gestión para poder verificar. */
+  readonly alertaAE27 = signal(false);
   readonly snackbarVisible = signal(false);
   readonly snackbarEliminadoVisible = signal(false);
   readonly snackbarElaboradoVisible = signal(false);
@@ -1245,6 +1258,20 @@ export class IndicadorDesempenoRequestComponent {
     this.subsanado.set(true);
     setTimeout(() => this.snackbarGuardadoVisible.set(true), 300);
     setTimeout(() => this.snackbarGuardadoVisible.set(false), 300 + 5000);
+  }
+
+  /**
+   * Intenta verificar: aplica la RN AE-27. Si algún indicador registrado no está vigente ni en Programación (P) ni en
+   * Gestión (G) (ambos en «No»), no permite verificar y muestra la alerta AE-27; de lo contrario abre la confirmación.
+   */
+  intentarVerificar(): void {
+    const sinVigencia = this.registros().some((r) => r.programacion === 'No' && r.gestion === 'No');
+    if (sinVigencia) {
+      this.alertaAE27.set(true);
+      return;
+    }
+    this.alertaAE27.set(false);
+    this.modalVerificar.set(true);
   }
 
   /** Confirma «Verificar y enviar»: el documento pasa a «Verificado» y se avisa. */
