@@ -338,6 +338,30 @@ export class IndicadorDesempenoDetalleComponent {
     { key: 'nombre', label: 'Nombre producto' },
   ];
 
+  // Indicador que reemplaza (indicador de desempeño «no vigente» al que sustituye el nuevo).
+  readonly indicadorReemplaza = signal<CatalogRow | null>(null);
+  readonly modalIndicadorReemplaza = signal(false);
+  readonly columnasIndicadorReemplaza: CatalogColumn[] = [
+    { key: 'codigo', label: 'Código indicador de desempeño no vigente', widthClass: 'w-[320px]' },
+    { key: 'nombre', label: 'Nombre indicador de desempeño no vigente' },
+  ];
+  readonly filasIndicadorReemplaza: CatalogRow[] = [
+    { id: '40', codigo: '40', nombre: 'Cobertura de parto institucional' },
+    { id: '4499', codigo: '4499', nombre: 'Porcentaje de personas con diabetes mellitus que son diagnosticadas con retinopatía diabética.' },
+    { id: '1148', codigo: '1148', nombre: 'Porcentaje de agentes de la pesca artesanal formalizados.' },
+    { id: '1306', codigo: '1306', nombre: 'Recaudación por acciones de fiscalización aduanera.' },
+    { id: '1794', codigo: '1794', nombre: 'Droga decomisada.' },
+    { id: '3425', codigo: '3425', nombre: 'Porcentaje de sistemas eléctricos críticos supervisados.' },
+    { id: '3892', codigo: '3892', nombre: 'Porcentaje de personas con competencias suficientes.' },
+    { id: '3953', codigo: '3953', nombre: 'Índice global de vigilancia de distritos expuestos a sismos.' },
+    { id: '5075', codigo: '5075', nombre: 'Porcentaje de kilómetros de red vial departamental con mejoramiento ejecutados por el Programa de Inversión Pública ProRegión.' },
+    { id: '2042', codigo: '2042', nombre: 'Porcentaje de expedientes resueltos entre expedientes ingresados.' },
+    { id: '2990', codigo: '2990', nombre: 'Número de acciones terroristas.' },
+    { id: '3789', codigo: '3789', nombre: 'Nivel de ingreso anual familiar.' },
+    { id: '4630', codigo: '4630', nombre: 'Frecuencia del consumo de bienes y/o servicios artísticos o culturales.' },
+    { id: '4977', codigo: '4977', nombre: 'Costo promedio mensual en transporte público de los hogares urbanos de quintiles 1 y 2 de ingresos.' },
+  ];
+
   // ── Datos del indicador ───────────────────────────────────────────
   readonly codigo = signal('');
   readonly nombre = signal('');
@@ -603,6 +627,20 @@ export class IndicadorDesempenoDetalleComponent {
 
   limpiarProducto(): void {
     this.producto.set(null);
+  }
+
+  // ── Selección del indicador que reemplaza (modal) ─────────────────
+  abrirModalIndicadorReemplaza(): void {
+    this.modalIndicadorReemplaza.set(true);
+  }
+
+  onIndicadorReemplazaAceptado(id: string): void {
+    this.indicadorReemplaza.set(this.filasIndicadorReemplaza.find((o) => o.id === id) ?? null);
+    this.modalIndicadorReemplaza.set(false);
+  }
+
+  limpiarIndicadorReemplaza(): void {
+    this.indicadorReemplaza.set(null);
   }
 
   /** Cambiar la dimensión reinicia la unidad de medida (sus opciones dependen de la dimensión). */

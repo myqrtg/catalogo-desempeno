@@ -983,7 +983,7 @@ export class IndicadorDesempenoRequestComponent {
 
   readonly camposCabecera: SolicitudeInfoField[] = [
     { label: 'Fecha', value: '' },
-    { label: 'Órgano rector', value: ORGANO_RECTOR },
+    { label: 'ENTE RECTOR', value: ORGANO_RECTOR },
   ];
 
   todosSeleccionados(): boolean {

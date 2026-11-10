@@ -17,5 +17,4 @@ export const NOMBRE_DOCUMENTO = 'Solicitud de indicadores de desempeño';
  * Órgano rector del documento. En el taller es fijo (dato de demostración); con un backend real vendría de la sesión
  * o del catálogo de órganos.
  */
-export const ORGANO_RECTOR =
-  'DIRECCIÓN DE CALIDAD DEL GASTO PÚBLICO DE LA DIRECCIÓN GENERAL DE PRESUPUESTO PÚBLICO';
+export const ORGANO_RECTOR = 'DIRECCIÓN GENERAL DE PRESUPUESTO PÚBLICO';
