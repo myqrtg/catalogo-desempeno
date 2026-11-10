@@ -156,7 +156,7 @@
 
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
       <siaf-input label="Área geográfica" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcArea" [value]="desagArea()" (valueChange)="desagArea.set($any($event))" />
-      <siaf-input label="Perodicidad por Ámbito" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="desagPeriodicidad()" (valueChange)="desagPeriodicidad.set($any($event))" />
+      <siaf-input label="Periodicidad por Ámbito" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="desagPeriodicidad()" (valueChange)="desagPeriodicidad.set($any($event))" />
     </div>
 
     <div class="flex flex-col gap-siaf-xs">
