@@ -381,23 +381,12 @@ export class IndicadorDesempenoDetalleComponent {
   readonly periodicidad = signal('');
 
   // ── Cobertura de medición ─────────────────────────────────────────
-  // Alcance geográfico: casillas combinables (Nacional, Regional, Local). El valor es la unión elegida.
-  private readonly ordenAlcance = ['Nacional', 'Regional'];
-  readonly opcionesAlcance = this.ordenAlcance;
-  readonly alcanceSel = signal<Set<string>>(new Set());
-  readonly alcanceGeografico = computed(() => this.ordenAlcance.filter((o) => this.alcanceSel().has(o)).join(', '));
-
-  alcanceMarcado(opcion: string): boolean {
-    return this.alcanceSel().has(opcion);
-  }
-
-  alternarAlcance(opcion: string, marcado: boolean): void {
-    this.alcanceSel.update((s) => {
-      const next = new Set(s);
-      if (marcado) next.add(opcion); else next.delete(opcion);
-      return next;
-    });
-  }
+  // Alcance geográfico: selección única (radio) «Nacional» o «Nacional y Regional».
+  readonly opcAlcance = [
+    { label: 'Nacional', value: 'Nacional' },
+    { label: 'Nacional y Regional', value: 'Nacional y Regional' },
+  ];
+  readonly alcanceGeografico = signal('');
   readonly nivelResponsable = signal('');
 
   // ── Desagregación geográfica: Área y Periodicidad comunes + varios ámbitos (modal). ──
@@ -723,7 +712,7 @@ export class IndicadorDesempenoDetalleComponent {
     this.supuestos.set(ind.supuestos);
     this.precisiones.set(ind.precisiones);
     this.periodicidad.set(ind.periodicidad);
-    this.alcanceSel.set(new Set(this.ordenAlcance.filter((o) => new RegExp(`\\b${o}\\b`).test(ind.alcance))));
+    this.alcanceGeografico.set(/\bRegional\b/.test(ind.alcance) ? 'Nacional y Regional' : 'Nacional');
     this.nivelResponsable.set(ind.nivelResponsable);
     this.programacion.set('NO'); // Vigencia en procesos fija en «No» (deshabilitada).
     this.gestion.set('NO');

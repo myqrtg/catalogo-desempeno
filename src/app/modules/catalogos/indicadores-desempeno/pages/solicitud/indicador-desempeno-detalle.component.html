@@ -137,17 +137,7 @@
 
   <!-- ── COBERTURA DE MEDICIÓN ── -->
   <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Cobertura de medición</h3>
-  <div class="flex flex-col gap-siaf-xs">
-    <span class="text-sm font-medium text-text">Alcance geográfico <span class="text-[var(--sys-color-text-feedback-danger)]">*</span></span>
-    <div class="flex flex-wrap gap-siaf-lg">
-      @for (opcion of opcionesAlcance; track opcion) {
-        <label class="flex cursor-pointer items-center gap-siaf-sm text-sm text-text">
-          <input type="checkbox" class="size-5" [checked]="alcanceMarcado(opcion)" [disabled]="bloqueado('otros')" (change)="alternarAlcance(opcion, $any($event.target).checked)" />
-          {{ opcion }}
-        </label>
-      }
-    </div>
-  </div>
+  <siaf-radio-group label="Alcance geográfico" name="alcance-geografico" [inline]="true" [required]="true" [disabled]="bloqueado('otros')" [options]="opcAlcance" [value]="alcanceGeografico()" (valueChange)="alcanceGeografico.set($event)" />
   <siaf-input class="md:max-w-[520px]" label="Nivel responsable del registro" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('otros')" [options]="opcNivelResponsable" [value]="nivelResponsable()" (valueChange)="nivelResponsable.set($any($event))" />
 
   <!-- ── DESAGREGACIÓN GEOGRÁFICA ── -->
