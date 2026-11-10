@@ -237,6 +237,8 @@ const OPCIONES_PRODUCTO: ProductoPresupuestal[] = [
 export class IndicadorDesempenoDetalleComponent {
   @Output() canceled = new EventEmitter<void>();
   @Output() saved = new EventEmitter<IndicadorDetalleResumen>();
+  /** Emite cuando se intenta aceptar con el indicador no vigente ni en Programación ni en Gestión (RN AE-27). */
+  @Output() vigenciaInvalida = new EventEmitter<void>();
   /** Emite si «Aceptar» debe estar habilitado; el padre lo usa para el botón proyectado (evita problemas de timing). */
   @Output() habilitadoChange = new EventEmitter<boolean>();
 
@@ -535,6 +537,11 @@ export class IndicadorDesempenoDetalleComponent {
 
   aceptar(): void {
     if (!this.aceptarHabilitado()) return;
+    // RN AE-27: en creación, el indicador debe estar vigente al menos en Programación o en Gestión.
+    if (this._modo() === 'creacion' && this.programacion() === 'NO' && this.gestion() === 'NO') {
+      this.vigenciaInvalida.emit();
+      return;
+    }
     const dimension = this.opcDimension.find((o) => o.value === this.dimension())?.label ?? this.dimension();
     const tipoCalculo = this.opcTipoCalculo.find((o) => o.value === this.tipoCalculo())?.label ?? this.tipoCalculo();
     const siNo = (v: string) => (v === 'SI' ? 'Sí' : v === 'NO' ? 'No' : v);

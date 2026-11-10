@@ -347,7 +347,7 @@ interface IndicadorRegistrado extends IndicadorDetalleResumen {
           </div>
 
           @if (mostrandoForm()) {
-            <siaf-indicador-desempeno-detalle (habilitadoChange)="detalleHabilitado.set($event)" (saved)="onRegistroGuardado($event)" (canceled)="cancelarForm()" />
+            <siaf-indicador-desempeno-detalle (habilitadoChange)="detalleHabilitado.set($event)" (saved)="onRegistroGuardado($event)" (vigenciaInvalida)="alertaAE27.set(true)" (canceled)="cancelarForm()" />
           } @else if (registros().length) {
             <div class="flex flex-col gap-siaf-md">
               <div class="flex items-center gap-siaf-sm">
@@ -1101,6 +1101,7 @@ export class IndicadorDesempenoRequestComponent {
   }
 
   onRegistroGuardado(resumen: IndicadorDetalleResumen): void {
+    this.alertaAE27.set(false);
     this.correlativo += 1;
     const id = this.correlativo;
     const codigo = resumen.codigo || String(this.correlativo).padStart(4, '0');
