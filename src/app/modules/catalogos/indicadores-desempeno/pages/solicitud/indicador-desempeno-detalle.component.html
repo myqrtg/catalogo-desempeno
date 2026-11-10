@@ -155,8 +155,8 @@
     <h3 class="m-0 mt-siaf-sm text-sm font-bold uppercase tracking-[0.02px] text-text">Desagregación geográfica de medición</h3>
 
     <div class="grid gap-x-siaf-xl gap-y-siaf-md md:grid-cols-2">
-      <siaf-input label="Área geográfica" type="select" placeholder="Seleccione" [disabled]="bloqueado('desagregacion')" [options]="opcArea" [value]="desagArea()" (valueChange)="desagArea.set($any($event))" />
-      <siaf-input label="Periodicidad" type="select" placeholder="Seleccione" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="desagPeriodicidad()" (valueChange)="desagPeriodicidad.set($any($event))" />
+      <siaf-input label="Área geográfica" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcArea" [value]="desagArea()" (valueChange)="desagArea.set($any($event))" />
+      <siaf-input label="Periodicidad" type="select" placeholder="Seleccione" [required]="true" [disabled]="bloqueado('desagregacion')" [options]="opcPeriodicidadTabla" [value]="desagPeriodicidad()" (valueChange)="desagPeriodicidad.set($any($event))" />
     </div>
 
     <div class="flex flex-col gap-siaf-xs">
